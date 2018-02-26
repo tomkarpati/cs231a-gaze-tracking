@@ -45,4 +45,5 @@ make install
 # Run a simple test to see if it's loaded and the version number
 popd
 
-python src/opencv-test.py
+python -c "import cv2 ; print (cv2.__version__)"
+
