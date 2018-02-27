@@ -124,12 +124,12 @@ using haar-feature based cascade classifier to identify a face.
 Once we have detected a face, we process frame detected 
 as face again using haar-feature based classifier to identify eyes. 
 
-In our initial runs we encountered difficulties with these cascade classifiers. 
+In our initial runs we encountered difficulties with these cascade classifiers.
+This can be seen in  (Figure~\ref{fig:defensive}).
 In order to sanitize the inputs passed to our neural network, we added 
 additional defensive coding to eliminate false positive detection 
 for eyes or faces. We make sure a detected face has eyes 
 and location of the eyes are not in the lower half of the detected face
- (Figure~\ref{fig:defensive}).
 
 \begin{figure}
   \begin{center}
@@ -176,7 +176,7 @@ rectified linear activation function, but the dimentionality is
 smaller in the image x- and y-axes, and larger in the filter bank
 depth. The output again is passed through a max-poolong layer.
 
-Following the two covolutional layers, the output is flattened into a
+Following the two convolutional layers, the output is flattened into a
 single vector and passes through a fully connected layer of 200
 units. This layer is then connected to two 50 unit output layers in
 fully connected fashion. These two sets of 50 units represent the x-
@@ -184,7 +184,7 @@ and y- outputs of the gaze. The two sets of 50 output represent
 segmenting the angle of gaze into 50 segments where the center output
 unit represents a gaze of 0 degrees. The x- and y- axes are separate
 here and the output is a softmax function and represents the
-probability distrubution of the output in the x- and y- directions.
+probability distribution of the output in the x- and y- directions.
 
 \section{Neural Network Datasets}
 We will use the Point of Gaze Eye-Tracking Dataset from the University
