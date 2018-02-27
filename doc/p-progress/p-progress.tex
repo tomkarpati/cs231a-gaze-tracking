@@ -115,12 +115,15 @@ We implemented the system in Python 2.7 using the OpenCV libraries for
 image processing tasks. The use of OpenCV gives us an easy hardware 
 abstraction layer to video capture and display peripherals. We use 
 haar-cascade utilizing Viola-Jones face recognition algorithm to 
-identify face and eyes. First we capture input stream using peripheral
+identify face and eyes. 
+
+First we capture input stream using peripheral
 interface provided by OpenCV. We convert each 
 frame as it is captured to grayscale, this frame is then analyzed 
 using haar-feature based cascade classifier to identify a face. 
-Once we have detected a face, we process the are of frame detected 
+Once we have detected a face, we process frame detected 
 as face again using haar-feature based classifier to identify eyes. 
+
 In our initial runs we encountered difficulties with these cascade classifiers. 
 In order to sanitize the inputs passed to our neural network, we added 
 additional defensive coding to eliminate false positive detection 
