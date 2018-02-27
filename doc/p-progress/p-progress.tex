@@ -59,26 +59,27 @@ necessity of external light source as required by existing solution.
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
-We propose to implement an eye-tracking
-system utilizing a single camera. Gaze tracking has numerous
-application in human computer interfaces from use as input for the
-impaired[1], to determination of region of interest for augmented
-reality and image processing. Our system would use a camera on a
-laptop and determine the target of the users gaze. This would then be
-used to move a cursor around a graphical keyboard on the display which
-could be used for input. Our design results in a multi-segment
-system. We propose to first segment the face from the image. Then the
-left and right eyes are each segmented from the face. The eyes are
-then fed into a trained neural network to determine the location of
-focus for the user. We will examine work that has already been done in
-the past on gaze tracking to build upon. The literature contains
-systems from strictly classical approaches to systems that are built
-on neural networks for the processing[3][4][5][6][7][8]. We hope to be
-able to use a combination of the two to achieve good results. While
-existing commercial solutions use external light source and additional
-hardware to implement eye tracking, we expect to utilize openly
-available gaze eye-tracking dataset to eliminate the requirement for
-any additional hardware.
+We propose to implement an eye-tracking system utilizing a single
+camera. Gaze tracking has numerous application in human computer
+interfaces from use as input for the impaired\cite{calvo}, to
+determination of region of interest for augmented reality and image
+processing. Our system would use a camera on a laptop and determine
+the target of the users gaze. This would then be used to move a cursor
+around a graphical keyboard on the display which could be used for
+input. Our design results in a multi-segment system. We propose to
+first segment the face from the image. Then the left and right eyes
+are each segmented from the face. The eyes are then fed into a trained
+neural network to determine the location of focus for the user. We
+will examine work that has already been done in the past on gaze
+tracking to build upon. The literature contains systems from strictly
+classical approaches to systems that are built on neural networks for
+the processing \cite{krafka} \cite{mcmurrough} \cite{weidenbacher}
+\cite{baluja} \cite{cazzato} \cite{li}. We hope to be able to use a
+combination of the two to achieve good results. While existing
+commercial solutions use external light source and additional hardware
+to implement eye tracking, we expect to utilize openly available gaze
+eye-tracking dataset to eliminate the requirement for any additional
+hardware.
 
 \section{Problem Statement}
 The existing commercial solution available require external hardware
@@ -169,17 +170,17 @@ probability distrubution of the output in the x- and y- directions.
 
 \section{Neural Network Datasets}
 We will use the Point of Gaze Eye-Tracking Dataset from the University
-of Texas at Arlington[2]. This provides a mapping from a video of eyes
-to locations in 3D space where the gaze of a user is focusing their
-attention. The dataset consists of data captured from 20 subjects. The
-dataset for each subject consists of a video of the user’s eye,
-transform matrices that relate the user’s eye and the screen of a
-display, and the target location on the screen that the subject is
-looking at. There are 6 scenarios for each of the 20 users. The
-transform and the target locations are provided per frame of the
-video. We also plan on using the comprehensive head pose and gaze
-database[4] to infer correlation between the pose of the head and the
-target that the subject is looking at.
+of Texas at Arlington\cite{eyetracking}. This provides a mapping from
+a video of eyes to locations in 3D space where the gaze of a user is
+focusing their attention. The dataset consists of data captured from
+20 subjects. The dataset for each subject consists of a video of the
+user’s eye, transform matrices that relate the user’s eye and the
+screen of a display, and the target location on the screen that the
+subject is looking at. There are 6 scenarios for each of the 20
+users. The transform and the target locations are provided per frame
+of the video. We also plan on using the comprehensive head pose and
+gaze database\cite{mcmourrough} to infer correlation between the pose
+of the head and the target that the subject is looking at.
 
 We hope to run the system in a real-time manner and compare our
 results to expected locations on the display. In this setup data that
@@ -197,7 +198,7 @@ has not been trained yet with our dataset.
   \item 2/9/18 - Familiarize with opencv and setup base infrastructure for face/eye detection
   \item 2/16/18 - Face and Eye Detection
   \item 2/23/18 - Setup a neural network with existing database
-  \item 2/26/18 Compile and submit progress report
+  \item 2/26/18 - Compile and submit progress report
   \item 3/9/18 - Trained the neural network ready for inference 
   \item 3/16/18 - Generate results and demo
 \end{itemize}
@@ -219,6 +220,56 @@ a user is looking at, and even use the system as an input device.
 {\small
 \bibliographystyle{ieee}
 \bibliography{egbib}
+\begin{thebibliography}{1}
+\bibitem{calvo}
+  Calvo A. et al.. Eye Tracking Impact on Quality-of-Life of ALS
+  Patients. In: Miesenberger K., Klaus J., Zagler W., Karshmer
+  A. (eds) \underline{Computers Helping People with Special Needs. ICCHP
+    2008}. \underline{Lecture Notes in Computer Science}, vol 5105. Springer,
+  Berlin, Heidelberg, 2008
+\bibitem{eyetracking}
+  http://heracleia.uta.edu/~mcmurrough/eyetracking/
+\bibitem{krafka}
+  Krafka, Kyle, et al. Eye tracking for everyone.
+  \textit{IEEE Conference on Computer Vision and Pattern Recognition
+    (CVPR)}, 2016
+\bibitem{mcmurrough}
+  McMurrough, Christopher D., et al. "A dataset for point of gaze
+  detection using head poses and eye images."
+  \textit{Journal on Multimodal User Interfaces 7.3} (2013): 207-215.
+\bibitem{weidenbacher}
+  Weidenbacher, U.; Layher, G.; Strauss, P.-M.; Neumann, H.: "A
+  comprehensive head pose and gaze database",
+  \textit{IET Conference Proceedings}, 2007
+\bibitem{baluja}
+  Baluja, Shumeet, and Dean Pomerleau. "Non-intrusive gaze tracking
+  using artificial neural networks." \textit{Advances in Neural
+    Information Processing Systems}. 1994.
+\bibitem{cazzato}
+  Cazzato, D., Dominio, F., Manduchi, R., and Castro, S. M.,
+  “Real-time Gaze Estimation Via Pupil Center Tracking”,
+  Paladyn. \textit{Journal of Behavioral Robotics}, In Press.
+\bibitem{li}
+  Li, Tianxing, et al. "Ultra-Low Power Gaze Tracking for Virtual
+  Reality." \textit{Proceedings of the 23rd Annual International
+    Conference on Mobile Computing and Networking}. ACM, 2017.
+\bibitem{lecun_1}
+  LeCun, Yann, et al. "Handwritten digit recognition with a
+  back-propagation network." \textit{Advances in neural information
+    processing systems}. 1990.
+\bibitem{lecun_2}
+  Le Cun, Yann, et al. "Handwritten zip code recognition with
+  multilayer networks." \textit{Pattern Recognition,
+    1990. Proceedings., 10th International Conference
+    on}. Vol. 2. IEEE, 1990.
+\bibitem{eyetrackerlist}
+  http://www.eyetracking.com/Hardware/Eye-Tracker-List
+\bibitem{tobii_1}
+  https://www.tobiidynavox.com/en-US/products/devices/
+\bibitem{tobii_2}
+  https://www.tobii.com/group/about/this-is-eye-tracking/
+
+\end{thebibliography}
 }
 
 \end{document}
