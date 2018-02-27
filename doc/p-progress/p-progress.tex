@@ -7,6 +7,9 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+% point to the figures
+\graphicspath{ {images/} }
+
 % Include other packages here, before hyperref.
 
 % If you comment hyperref and then uncomment it, you should delete
@@ -20,7 +23,7 @@
 \def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
 
 % Pages are numbered in submission mode, and unnumbered in camera-ready
-\ifcvprfinal\pagestyle{empty}\fi
+%\ifcvprfinal\pagestyle{empty}\fi
 \setcounter{page}{1}
 \begin{document}
 
@@ -49,7 +52,7 @@ Stanford University \\
 \begin{abstract}
 This paper presents a low cost alternative to traditional eye-tracking
 interface to help physically impaired users interact. We propose to
-implement eye-tracking system utilizing a single camera. We present a
+implement an eye-tracking system utilizing a single camera. We present a
 Convolutional Neural Networks based approach which eliminates the
 necessity of external light source as required by existing solution.
 \end{abstract}
@@ -77,7 +80,94 @@ hardware to implement eye tracking, we expect to utilize openly
 available gaze eye-tracking dataset to eliminate the requirement for
 any additional hardware.
 
-\section{Datasets}
+\section{Problem Statement}
+The existing commercial solution available require external hardware
+being attached to existing device[9][10] This makes eye tracking an
+expensive and unreachable solution for many. These solutions are based
+on external infrared light source and rely on the reflection of the
+light from the user’s pupil to identify point of user interest. We hope to
+utilize the built in web camera of our system and eliminate the necessity
+of additional hardware such as external light sources with help of a
+well trained convolutional neural network.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\linewidth]{existing_solutions}
+  \end{center}
+  \caption{Existing solutions to gaze-tracking problem}
+  \label{fig:existsol}
+  \end{figure}
+
+A brief introduction of existing solution mechanism can be seen Figure~\ref{fig:existsol}.
+
+\section{Technical Approach}
+
+\subsection{Image capture and face/eye detection}
+We implemented the system in Python 2.7 using the OpenCV libraries for
+image processing tasks. The use of OpenCV gives us an easy hardware
+abstraction layer to video capture and display peripherals. We use
+haar-cascade utilizing  Viola-Jones face recognition algorithm to
+identify face and eyes. We added additional defensive coding to
+eliminate false positive detection for eyes or faces. We make sure a
+detected face has eyes and location of the eyes are not in the lower
+half of the detected face (Figure~\ref{fig:defensive}).
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\linewidth]{defensive_coding_example}
+  \end{center}
+  \caption{Failure observed without defensive coding for face and eye
+    verification.}
+  \label{fig:defensive}
+\end{figure}
+
+
+Once the face itself has been extracted from the video and the eyes
+are isolated from the face, then images  of the face and the location
+of eyes are fed into a neural network to determine the location of the
+gaze.
+
+
+\subsection{Neural Network}
+The neural network is implemented in TensorFlow. The neural network is
+a multilayer classifier where the inputs are the extracted images of
+the eyes and the bounding boxes for the eyes and the face in the
+original image. The two images of the eyes are 32x32x3 images where
+the extracted images of the eyes are scaled to a set size. This gives
+us a fixed image size to feed into the network invariant of the
+original size of the eyes in the original video frame. The size of
+32x32 should be large enough to provide enough detail without creating
+a network that is too large. It is in line with work that has come
+before.
+
+The images are fed into a bank of 16xs convolutional
+filters. This results in an output of 32x32x16 outputs. The filter
+kernels have support of 5 pixels in the x- and y-axes. The output of
+the convolutional filters is passed through a rectified linear
+activation function. Following the convolution layer, we perform max pooling with a
+non-overlapping 2x2 filter to reduce the dimentionality.
+
+A second bank of convolutional filters is then convolved with the
+output of the first bank. The second set of layers is also a
+convolution and max pooling layer. The input of the second bank has
+shape of 16x16x16 inputs. The second bank has 16 input and 32 output
+channels and stride of 1. The filter kernel has support of 5
+pixels. This is essentially the same as the first layer with a
+rectified linear activation function, but the dimentionality is
+smaller in the image x- and y-axes, and larger in the filter bank
+depth. The output again is passed through a max-poolong layer.
+
+Following the two covolutional layers, the output is flattened into a
+single vector and passes through a fully connected layer of 200
+units. This layer is then connected to two 50 unit output layers in
+fully connected fashion. These two sets of 50 units represent the x-
+and y- outputs of the gaze. The two sets of 50 output represent
+segmenting the angle of gaze into 50 segments where the center output
+unit represents a gaze of 0 degrees. The x- and y- axes are separate
+here and the output is a softmax function and represents the
+probability distrubution of the output in the x- and y- directions.
+
+\section{Neural Network Datasets}
 We will use the Point of Gaze Eye-Tracking Dataset from the University
 of Texas at Arlington[2]. This provides a mapping from a video of eyes
 to locations in 3D space where the gaze of a user is focusing their
@@ -96,25 +186,21 @@ results to expected locations on the display. In this setup data that
 we capture from the camera connected to the system will be used as our
 system inputs and data to process.
 
-\section{Methods}
-We propose that the system will capture video from camera available on
-most laptops as the input capture device. The images from the video
-can be used to determine the face of the user using the Viola-Jones
-face recognition algorithm in OpenCV. The face itself can be extracted
-from the video and the eyes can be isolated from the face. The images
-of the eyes are fed into a neural network to determine the location of
-the gaze. The neural network is trained by the data from the Point of
-Gase dataset. This can then provide a mapping from the eye to the
-location in space that the user is looking. This information can then
-be used to perform various tasks such as selecting keys from an
-on-screen keyboard extended to move a bounding box around the screen
-for an item of interest.
+\section{Progress}
 
-We propose to implement the system in Python 2.7 using the OpenCV
-libraries for image processing tasks. The neural network is
-implemented in TensorFlow (also in Python). The use of OpenCV gives us
-an easy hardware abstraction layer to video capture and display
-peripherals.
+\subsection{Neural Network}
+We currently have the neural network implemented in TensorFlow, but
+has not been trained yet with our dataset.
+
+\subsection{Timeline}
+\begin{itemize}
+  \item 2/9/18 - Familiarize with opencv and setup base infrastructure for face/eye detection
+  \item 2/16/18 - Face and Eye Detection
+  \item 2/23/18 - Setup a neural network with existing database
+  \item 2/26/18 Compile and submit progress report
+  \item 3/9/18 - Trained the neural network ready for inference 
+  \item 3/16/18 - Generate results and demo
+\end{itemize}
 
 \section{Evaluation}
 We propose to evaluate our results by having the user follow an object
