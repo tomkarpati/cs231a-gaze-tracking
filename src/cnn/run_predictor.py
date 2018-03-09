@@ -44,11 +44,10 @@ conv_layer_1_space['pooling'] = [2, 2]
 space['conv_layer_1'] = conv_layer_1_space
 space['conv_layer_2'] = conv_layer_1_space
 
-space['num_fc_layers'] = 3
+space['num_fc_layers'] = 2
 space['fc_layer_0'] = 1024
 space['fc_layer_1'] = 1024
-space['fc_layer_2'] = 25
-space['target_x'] = 25
+space['readout_x'] = 25
 
 # Build the predictor
 predictor = p.pTfCNNPredictor(space,

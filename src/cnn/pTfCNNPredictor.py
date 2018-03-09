@@ -81,21 +81,10 @@ class pTfCNNPredictor:
         #self.eyeRBB = placeholder_bb("eye_r_bb")
         #self.faceBB = placeholder_bb("face_bb")
 
-        def add_tf_variable(name, space, inittype='normal'):
-            if (inittype == 'normal'):
-                initVal = 0.0
-                print "Initialize variable {} with mean {}".format(name, initVal)
-                init = tf.truncated_normal(shape=space, mean=initVal, stddev=0.1)
-            elif (inittype == 'const'):
-                initVal = 0.1
-                print "Initialize variable {} with const {}".format(name, initVal)
-                init = tf.constant(initVal, shape=space)
-            else:
-                assert(0)
+        print self.eyeL
+        print self.targetXClass
 
-            v = tf.Variable(init, name=name)
-            return v
-
+        # Define some functions to create our layers
         def add_conv_layer(name, x, space):
             print "Building convolutional layer {}, with input {}, and space {}".format(name, x, space)
             with tf.name_scope(name):
@@ -131,46 +120,48 @@ class pTfCNNPredictor:
 
         def add_fc_layer(name, x, space):
             print "Building layer {}, with input {}, and space {}".format(name, x, space)
+
             with tf.name_scope(name):
-                WSpace = [np.shape(x)[1].value, space]
-                W = add_tf_variable("W",
-                                    WSpace)
-                b = add_tf_variable("b",
-                                    [space],
-                                    inittype="const")
-                mult = tf.matmul(x,W)
-                act = mult + b
-
-                # Run through non-linear function
-                h = tf.nn.relu(act)
-
-                tf.summary.histogram("W",W)
-                tf.summary.histogram("b",b)
-                tf.summary.histogram("mult",mult)
-                tf.summary.histogram("activation",act)
+                h = tf.layers.dense(inputs=x,
+                                    units=space,
+                                    activation=tf.nn.relu,
+                                    use_bias=True,
+                                    name=name)
+                
                 tf.summary.histogram("hidden",h)
                 
                 if self.verbose:
-                    print W
-                    print b
-                    print mult
-                    print act
                     print h
 
 
             return (h,act)
 
+        def add_readout_layer(name, x, space):
+            print "Building readout layer {}, with input {}, and space {}".format(name,x,space)
+
+            with tf.name_scope(name):
+                # This will use a linear activation function
+                score = tf.layers.dense(inputs=x,
+                                         units=space,
+                                         use_bias=True,
+                                         name=name)
+
+                tf.summary.histogram("score",score)
+
+                if self.verbose:
+                    print score
+
+            return score
+
+        
         # Flatten out the images and turn into a single vector
         def vectorize(i):
             dim = np.prod(i.get_shape().as_list()[1:])
             return tf.reshape(i, [-1, dim])
 
-        print self.eyeL
-        print self.targetXClass
-
+        x = self.eyeL
 
         # Add our convolutional layers
-        x = self.eyeL
         for l in range(0,space['num_conv_layers']):
             name="conv_layer_"+str(l)
             x = add_conv_layer(name, x, space[name])
@@ -180,9 +171,10 @@ class pTfCNNPredictor:
 
         for l in range(0,space['num_fc_layers']):
             name="fc_layer_"+str(l)
-            (x,act) = add_fc_layer(name, x, space[name])
+            x = add_fc_layer(name, x, space[name])
 
-        self.score = act
+        name = "readout_x"
+        self.score = add_readout_layer(name, x, space[name])
 
     
     def init_logging(self, location=None):
@@ -198,7 +190,27 @@ class pTfCNNPredictor:
             self.logFH = open(self.logFile,'w')
             
 
-
+    def loss_func(self, target, score):
+        
+        # Define a sub-loss for each directory(x or y)
+        def sub_loss(target, score, name):
+            # Perform softmax entropy at last layer
+            with tf.name_scope(name):
+                cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
+                    labels=target,
+                    logits=score,
+                    name="cross_entropy")
+                mean = tf.reduce_mean(cross_entropy, name="mean_cross_entropy")
+                total = tf.reduce_sum(cross_entropy, name="sum_cross_entropy")
+                tf.summary.histogram("cross_entropy", cross_entropy)
+                tf.summary.scalar("mean_cross_entropy", mean)
+                return (mean, total)
+            
+        # Define the loss in X-direction
+        (x_mean_loss, x_total_loss) = sub_loss(target, score, "loss_x")
+            
+        return (x_mean_loss, x_total_loss)
+    
     # Train the predictor
     def train(self,
               trainingSet,
@@ -212,18 +224,21 @@ class pTfCNNPredictor:
         # Define some variables
         with tf.name_scope("train"):
             predictedXClass = tf.argmax(self.score,1)
-            self.train_correct = tf.reduce_sum(tf.cast(tf.equal(self.targetXClass,
-                                                                tf.cast(predictedXClass,
-                                                                        tf.int32)),
-                                                       tf.int8))
+            self.train_correct = tf.cast(tf.equal(self.targetXClass,
+                                                  tf.cast(predictedXClass,
+                                                          tf.int32)),
+                                         tf.int8))
+            self.train_num_correct = tf.reduce_sum(self.train_correct)
+            self.train_accuracy = tf.reduce_mean(self.train_correct)
 
             if self.tensorboard:
-                tf.summary.scalar("training accuracy", self.train_correct)
+                tf.summary.scalar("Training correct", self.train_correct)
+                tf.summary.scalar("Training accuracy", self.train_accuracy)
+                
                 self.merged = tf.summary.merge_all()
                 opList.append(self.merged)
 
-        opList.extend([self.train_correct,
-                       self.score,
+        opList.extend([self.train_num_correct,
                        predictedXClass,
                        self.meanLoss,
                        self.totalLoss,
@@ -239,8 +254,6 @@ class pTfCNNPredictor:
             epochCorrect = 0
             epochLoss = 0
             for batchStart in range(0, trainingSet.numSamples, batchSize):
-                sys.stdout.write(".")
-                sys.stdout.flush()
                 
                 batchEnd = batchStart + batchSize
                 if (batchEnd > trainingSet.numSamples):
@@ -258,58 +271,41 @@ class pTfCNNPredictor:
                     self.trainWriter.add_summary(summary,(i*trainingSet.numSamples) + batchStart)
 
                     
-                (correct, score, predX, meanLoss, totalLoss, tmp, train) = result
+                (num_correct, predX, meanLoss, totalLoss, tmp, train) = result
                 epochCorrect += correct
                 epochLoss += totalLoss
 
                 if self.verbose:
                     print "Training batch @{}: correct {}".format(batchStart,
-                                                                  correct)
+                                                                  num_correct)
                     #print "Score: {}".format(score)
                     print "Loss: {}".format(meanLoss)
-                    print "Predicted: {}".format(predX)
-                    print "Label: {}".format(targetXClass)
+                    print "Predicted & Target:"
+                    print predX
+                    print targetXClass
+                else:
+                    sys.stdout.write(".")
+                    sys.stdout.flush()
+
 
             print "Total loss: {}".format(epochLoss*1.0/trainingSet.numSamples)
             print "Overall prediction rate: {}".format(epochCorrect*1.0/trainingSet.numSamples)
 
 
         #print "VAR: ({}) {}".format(np.shape(tmp),tmp)
-        for im in range(0,np.size(tmp,axis=3)):
-            #print "filtered im {}".format(im)
-            fig = plt.figure()
-            i = tmp[-1,:,:,im]
-            np.shape(i)
-            plt.imshow(tmp[-1,:,:,im],cmap="gray")
-            plt.show()
+        #for im in range(0,np.size(tmp,axis=3)):
+        #    #print "filtered im {}".format(im)
+        #    fig = plt.figure()
+        #    i = tmp[-1,:,:,im]
+        #    np.shape(i)
+        #    plt.imshow(tmp[-1,:,:,im],cmap="gray")
+        #    plt.show()
 
 
             
     def predict(self):
         pass
 
-
-    def loss_func(self, target, score):
-
-        # Define a sub-loss for each directory(x or y)
-        def sub_loss(target, score, name):
-            # Perform softmax entropy at last layer
-            with tf.name_scope(name):
-                cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                    labels=target,
-                    logits=score,
-                    name="cross_entropy")
-                mean = tf.reduce_mean(cross_entropy, name="mean_cross_entropy")
-                total = tf.reduce_sum(cross_entropy, name="sum_cross_entropy")
-                tf.summary.histogram("cross_entropy", cross_entropy)
-                tf.summary.scalar("mean_cross_entropy", mean)
-                return (mean, total)
-
-        # Define the loss in X-direction
-        (x_mean_loss, x_total_loss) = sub_loss(target, score, "loss_x")
-        
-        return (x_mean_loss, x_total_loss)
-    
 
     def optimizer(self,
                   optType='gradient',
