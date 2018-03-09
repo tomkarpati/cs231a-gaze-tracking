@@ -16,5 +16,8 @@ pip install -U pip
 # Install numpy
 pip install --upgrade numpy
 
+# Install opencv
+pip install --upgrade opencv-python
+
 # Install tensor flow
 pip install --upgrade tensorflow
