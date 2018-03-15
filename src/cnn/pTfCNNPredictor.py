@@ -35,7 +35,7 @@ class pTfCNNPredictor:
         self.init_logging()
 
         # Setup the loss and build the optimizer
-        (self.meanLoss, self.totalLoss) = self.loss_func(self.targetXClass,self.score)
+        (self.meanLoss, self.totalLoss) = self.loss_func(self.targetX,self.scoreX)
         self.optimizer(optType=optType)
 
         self.init_session()
@@ -62,14 +62,14 @@ class pTfCNNPredictor:
         self.eyeL = placeholder_eye(space['image'],"eye_l")
         #self.eyeR = placeholder_eye(space['image'],"eye_r")
 
-        def placeholder_targetClass(name):
+        def placeholder_target(name):
             # The class placeholders have batchx1 dimensions
             print "Building target {}".format(name)
-            return tf.placeholder(tf.int32,
+            return tf.placeholder(tf.float32,
                                   [None],
                                   name=name)
         
-        self.targetXClass = placeholder_targetClass("target_x")
+        self.targetX = placeholder_target("target_x")
         
         def placeholder_bb(name):
             print "Building bounding box input {}".format(name)
@@ -82,7 +82,7 @@ class pTfCNNPredictor:
         #self.faceBB = placeholder_bb("face_bb")
 
         print self.eyeL
-        print self.targetXClass
+        print self.targetX
 
         # Define some functions to create our layers
         def add_conv_layer(name, x, space):
@@ -174,7 +174,7 @@ class pTfCNNPredictor:
             x = add_fc_layer(name, x, space[name])
 
         name = "readout_x"
-        self.score = add_readout_layer(name, x, space[name])
+        self.scoreX = add_readout_layer(name, x, space[name])
 
     
     def init_logging(self, location=None):
@@ -191,19 +191,19 @@ class pTfCNNPredictor:
             
 
     def loss_func(self, target, score):
+
+        print target
+        print score
         
         # Define a sub-loss for each directory(x or y)
         def sub_loss(target, score, name):
             # Perform softmax entropy at last layer
             with tf.name_scope(name):
-                cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                    labels=target,
-                    logits=score,
-                    name="cross_entropy")
-                mean = tf.reduce_mean(cross_entropy, name="mean_cross_entropy")
-                total = tf.reduce_sum(cross_entropy, name="sum_cross_entropy")
-                tf.summary.histogram("cross_entropy", cross_entropy)
-                tf.summary.scalar("mean_cross_entropy", mean)
+                dist = tf.norm(target - score)
+                mean = tf.reduce_mean(dist, name="mean_distance")
+                total = tf.reduce_sum(dist, name="sum_distance")
+                tf.summary.histogram("distance", dist)
+                tf.summary.scalar("mean_distance", mean)
                 return (mean, total)
             
         # Define the loss in X-direction
@@ -223,26 +223,14 @@ class pTfCNNPredictor:
             
         # Define some variables
         with tf.name_scope("train"):
-            predictedXClass = tf.argmax(self.score,1)
-            self.train_correct = tf.cast(tf.equal(self.targetXClass,
-                                                  tf.cast(predictedXClass,
-                                                          tf.int32)),
-                                         tf.float32)
-            self.train_num_correct = tf.reduce_sum(self.train_correct)
-            self.train_accuracy = tf.reduce_mean(self.train_correct)
-
-            if self.tensorboard:
-                tf.summary.scalar("Training correct", self.train_num_correct)
-                tf.summary.scalar("Training accuracy", self.train_accuracy)
+                tf.summary.scalar("Training batch mean loss", self.meanLoss)
                 
                 self.merged = tf.summary.merge_all()
                 opList.append(self.merged)
 
-        opList.extend([self.train_num_correct,
-                       self.train_accuracy,
-                       predictedXClass,
-                       self.meanLoss,
+        opList.extend([self.meanLoss,
                        self.totalLoss,
+                       self.scoreX,
                        self.tmp,
                        self.train_step])
         
@@ -266,18 +254,17 @@ class pTfCNNPredictor:
 
                 # The input is arranged as (rows=samples x colums=features)
                 eyeL = trainingSet.eyeL[batchStart:batchEnd,:]
-                targetXClass = trainingSet.targetXClass[batchStart:batchEnd]/2
+                targetX = trainingSet.targetX[batchStart:batchEnd]
                 result = self.session.run(opList,
                                           feed_dict={self.eyeL : eyeL,
-                                                     self.targetXClass : targetXClass})
+                                                     self.targetX : targetX})
                 if self.tensorboard:
                     summary = result[0]
                     result = result[1:]
                     self.trainWriter.add_summary(summary,(i*trainingSet.numSamples) + batchStart)
 
                     
-                (num_correct, accuracy, predX, meanLoss, totalLoss, tmp, train) = result
-                epochCorrect += num_correct
+                (meanLoss, totalLoss, predX, tmp, train) = result
                 epochLoss += totalLoss
 
                 #if (not self.tmp == None):
@@ -289,11 +276,9 @@ class pTfCNNPredictor:
                 if self.logging:
                     s  = str(i)+","
                     s += str(batchStart)+","
-                    s += str(num_correct)+","
                     s += str(meanLoss)+","
-                    s += str(accuracy)+","
                     s += "{},".format(predX)
-                    s += "{},".format(targetXClass)
+                    s += "{},".format(targetX)
                     s += "\n"
                     self.logFH.write(s)
 
@@ -309,7 +294,6 @@ class pTfCNNPredictor:
 
 
             print "Total loss: {}".format(epochLoss*1.0/trainingSet.numSamples)
-            print "Overall prediction rate: {}".format(epochCorrect*1.0/trainingSet.numSamples)
 
 
         #print "VAR: ({}) {}".format(np.shape(tmp),tmp)

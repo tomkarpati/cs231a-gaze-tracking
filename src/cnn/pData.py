@@ -139,31 +139,7 @@ class pData:
         # reshape 
         self.eyeL = np.reshape(eyeLData, eyeLSize)
         
-        # We need to bin the target data
-        def binTarget(a):
-            amin = a.min()
-            amax = a.max()
-            if self.verbose:
-                print "Binned data range is {},{}".format(amin, amax)
-            r = amax - amin
-            bs = r * 1.0/self.targetVectorClassSize
-            logits = np.empty([len(a),self.targetVectorClassSize],
-                              dtype=int)
-            labels = np.empty([len(a)],
-                              dtype=int)
-            for i in range(len(a)):
-                for j in range(self.targetVectorClassSize):
-                    if (a[i] <= amin + (j+1)*bs):
-                        labels[i] = j
-                        logits[i,j] = 1
-                        break
-            return (logits, labels)
-                        
-        (self.targetX, self.targetXClass) = binTarget(d[:,np.prod(self.imSize)])
-        if self.verbose:
-            print "Left eye dataset size: {}".format(np.shape(self.eyeL))
-            print "Target X dataset size (logits): {}".format(np.shape(self.targetX))
-            print "Target X dataset size (labels): {}".format(np.shape(self.targetXClass))
+        self.targetX = d[:,np.prod(self.imSize)]
 
         return
     

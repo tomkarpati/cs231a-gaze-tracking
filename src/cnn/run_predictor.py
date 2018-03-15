@@ -54,7 +54,7 @@ space['num_fc_layers'] = 3
 space['fc_layer_0'] = 1024
 space['fc_layer_1'] = 1024
 space['fc_layer_2'] = 1024
-space['readout_x'] = 25
+space['readout_x'] = 1
 
 # Build the predictor
 predictor = p.pTfCNNPredictor(space,
@@ -70,18 +70,9 @@ data.load_dataset(filename=args.dataset)
 print "image min: {}".format(np.min(data.eyeL))
 print "image max: {}".format(np.max(data.eyeL))
 print "image mean: {}".format(np.mean(data.eyeL))
-
-# Do some contrast control
-fig = plt.figure()
-#print np.shape(data.eyeL[0])
-#plt.imshow(data.eyeL[0,:,:,0])
-#plt.show()
-#data.eyeL = data.eyeL - np.mean(data.eyeL)
-#plt.imshow(data.eyeL[0,:,:,0])
-#plt.show()
-#data.eyeL = np.clip(data.eyeL*2.0,-127, 127)
-plt.imshow(data.eyeL[0,:,:,0])
-plt.show()
+print "target x min: {}".format(np.min(data.targetX))
+print "target x max: {}".format(np.max(data.targetX))
+print "target x mean: {}".format(np.mean(data.targetX))
 
 # Train this thing
 predictor.train(trainingSet=data,
