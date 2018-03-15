@@ -20,6 +20,8 @@ class pData:
         print "-- verbose: {}".format(verbose)
         print "-- image size: {}".format(imSize)
 
+
+    # We can concatinate multiple of these calls together
     def read_data(self,
                   basename,
                   directory="."):
@@ -57,12 +59,13 @@ class pData:
         dim = []
         dim.append(videoFrames)
         dim.extend(self.imSize)
-        print dim
+        size = tuple(self.imSize[0:2])
+        print "Video dimensions: {} , {}".format(dim,size)
         self.dataFrames = np.empty(dim)
         for i in range(0,videoFrames):
             ret, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            self.dataFrames[i] = cv2.resize(gray, tuple(self.imSize))
+            self.dataFrames[i] = np.reshape(cv2.resize(gray, size), self.imSize)
 
             cv2.imshow('frame',gray)
             cv2.waitKey(10)
