@@ -87,9 +87,8 @@ class pTfCNNPredictor:
         # Define some functions to create our layers
         def add_conv_layer(name, x, space):
             print "Building convolutional layer {}, with input {}, and space {}".format(name, x, space)
+            # Build a conv2 layer
             with tf.name_scope(name):
-
-                # Build a conv2 layer
                 conv = tf.layers.conv2d(
                     inputs=x,
                     filters=space['filter'][1],
@@ -98,10 +97,11 @@ class pTfCNNPredictor:
                     activation=tf.nn.relu,
                     use_bias=True,
                     name=name)
-
+            
                 pool = tf.layers.max_pooling2d(inputs=conv,
                                                pool_size=space['pooling'][0],
-                                               strides=space['pooling'][1])
+                                               strides=space['pooling'][1],
+                                               name=name)
                 
                 if name=="conv_layer_0":
                     print "storing {}".format(name)
@@ -110,47 +110,47 @@ class pTfCNNPredictor:
                 
                 tf.summary.histogram("conv",conv)
                 tf.summary.histogram("pooling",pool)
-                
+
                 if self.verbose:
                     print conv
                     print pool
-
+                
             return pool
                     
 
         def add_fc_layer(name, x, space):
             print "Building layer {}, with input {}, and space {}".format(name, x, space)
-
+            # Build a fully connected layer
             with tf.name_scope(name):
                 h = tf.layers.dense(inputs=x,
                                     units=space,
                                     activation=tf.nn.relu,
                                     use_bias=True,
                                     name=name)
-                
+            
                 tf.summary.histogram("hidden",h)
-                
+            
                 if self.verbose:
                     print h
 
 
-            return (h,act)
+            return h
 
         def add_readout_layer(name, x, space):
             print "Building readout layer {}, with input {}, and space {}".format(name,x,space)
-
+            # Build a readout layer at the end
+            # This will use a linear activation function
             with tf.name_scope(name):
-                # This will use a linear activation function
                 score = tf.layers.dense(inputs=x,
-                                         units=space,
-                                         use_bias=True,
-                                         name=name)
+                                        units=space,
+                                        use_bias=True,
+                                        name=name)
 
                 tf.summary.histogram("score",score)
 
                 if self.verbose:
                     print score
-
+                    
             return score
 
         
@@ -227,18 +227,19 @@ class pTfCNNPredictor:
             self.train_correct = tf.cast(tf.equal(self.targetXClass,
                                                   tf.cast(predictedXClass,
                                                           tf.int32)),
-                                         tf.int8))
+                                         tf.float32)
             self.train_num_correct = tf.reduce_sum(self.train_correct)
             self.train_accuracy = tf.reduce_mean(self.train_correct)
 
             if self.tensorboard:
-                tf.summary.scalar("Training correct", self.train_correct)
+                tf.summary.scalar("Training correct", self.train_num_correct)
                 tf.summary.scalar("Training accuracy", self.train_accuracy)
                 
                 self.merged = tf.summary.merge_all()
                 opList.append(self.merged)
 
         opList.extend([self.train_num_correct,
+                       self.train_accuracy,
                        predictedXClass,
                        self.meanLoss,
                        self.totalLoss,
@@ -251,6 +252,10 @@ class pTfCNNPredictor:
             sys.stdout.write("Training: epoch {}:\n".format(i))
             sys.stdout.flush()
 
+            if self.logging:
+                self.logFH.write("Training:\n")
+                                 
+            
             epochCorrect = 0
             epochLoss = 0
             for batchStart in range(0, trainingSet.numSamples, batchSize):
@@ -271,18 +276,33 @@ class pTfCNNPredictor:
                     self.trainWriter.add_summary(summary,(i*trainingSet.numSamples) + batchStart)
 
                     
-                (num_correct, predX, meanLoss, totalLoss, tmp, train) = result
-                epochCorrect += correct
+                (num_correct, accuracy, predX, meanLoss, totalLoss, tmp, train) = result
+                epochCorrect += num_correct
                 epochLoss += totalLoss
 
+                #if (not self.tmp == None):
+                #print self.tmp[0,:,:,0]
+                #fig = plt.figure()
+                #plt.imshow(self.tmp[0,:,:,0])
+                #plt.show()
+                
+                if self.logging:
+                    s  = str(i)+","
+                    s += str(batchStart)+","
+                    s += str(num_correct)+","
+                    s += str(meanLoss)+","
+                    s += str(accuracy)+","
+                    s += "{},".format(predX)
+                    s += "{},".format(targetXClass)
+                    s += "\n"
+                    self.logFH.write(s)
+
                 if self.verbose:
-                    print "Training batch @{}: correct {}".format(batchStart,
-                                                                  num_correct)
-                    #print "Score: {}".format(score)
-                    print "Loss: {}".format(meanLoss)
-                    print "Predicted & Target:"
-                    print predX
-                    print targetXClass
+                    #print "Training batch @{}: correct {}".format(batchStart,
+                    #                                              num_correct)
+                    #print "Loss: {}".format(meanLoss)
+                    #print "Accuracy: {}".format(accuracy)
+                    pass
                 else:
                     sys.stdout.write(".")
                     sys.stdout.flush()

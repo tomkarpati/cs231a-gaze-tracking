@@ -9,6 +9,7 @@ import argparse
 import datetime
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 # Load the predictor classes
 import pTfCNNPredictor as p
@@ -34,7 +35,7 @@ space['num_conv_layers'] = 3
 conv_layer_0_space = {}
 conv_layer_0_space['filter'] = [ 3, 16 ]
 conv_layer_0_space['stride'] = 1
-conv_layer_0_space['pooling'] = [2, 2]
+conv_layer_0_space['pooling'] = [1, 1]
 space['conv_layer_0'] = conv_layer_0_space
 
 conv_layer_1_space = {}
@@ -42,11 +43,17 @@ conv_layer_1_space['filter'] = [ 3, 64 ]
 conv_layer_1_space['stride'] = 1
 conv_layer_1_space['pooling'] = [2, 2]
 space['conv_layer_1'] = conv_layer_1_space
-space['conv_layer_2'] = conv_layer_1_space
 
-space['num_fc_layers'] = 2
+conv_layer_2_space = {}
+conv_layer_2_space['filter'] = [ 3, 64 ]
+conv_layer_2_space['stride'] = 1
+conv_layer_2_space['pooling'] = [1, 1]
+space['conv_layer_2'] = conv_layer_2_space
+
+space['num_fc_layers'] = 3
 space['fc_layer_0'] = 1024
 space['fc_layer_1'] = 1024
+space['fc_layer_2'] = 1024
 space['readout_x'] = 25
 
 # Build the predictor
@@ -59,7 +66,24 @@ predictor = p.pTfCNNPredictor(space,
 data = d.pData(verbose=True)
 data.load_dataset(filename=args.dataset)
 
+# Collect some stats for the input.
+print "image min: {}".format(np.min(data.eyeL))
+print "image max: {}".format(np.max(data.eyeL))
+print "image mean: {}".format(np.mean(data.eyeL))
+
+# Do some contrast control
+fig = plt.figure()
+#print np.shape(data.eyeL[0])
+#plt.imshow(data.eyeL[0,:,:,0])
+#plt.show()
+#data.eyeL = data.eyeL - np.mean(data.eyeL)
+#plt.imshow(data.eyeL[0,:,:,0])
+#plt.show()
+#data.eyeL = np.clip(data.eyeL*2.0,-127, 127)
+plt.imshow(data.eyeL[0,:,:,0])
+plt.show()
+
 # Train this thing
 predictor.train(trainingSet=data,
                 testSet=None,
-                epochs=10)
+                epochs=100)
