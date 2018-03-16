@@ -66,7 +66,7 @@ class pTfCNNPredictor:
             # The class placeholders have batchx1 dimensions
             print "Building target {}".format(name)
             return tf.placeholder(tf.float32,
-                                  [None],
+                                  [None, 1],
                                   name=name)
         
         self.targetX = placeholder_target("target_x")
@@ -197,18 +197,18 @@ class pTfCNNPredictor:
         
         # Define a sub-loss for each directory(x or y)
         def sub_loss(target, score, name):
-            # Perform softmax entropy at last layer
+            # Compute the error
             with tf.name_scope(name):
-                dist = tf.norm(target - score)
-                mean = tf.reduce_mean(dist, name="mean_distance")
-                total = tf.reduce_sum(dist, name="sum_distance")
-                tf.summary.histogram("distance", dist)
-                tf.summary.scalar("mean_distance", mean)
-                return (mean, total)
+                se = (target - score)**2
+                mse = tf.reduce_mean(se, name="mean_error")
+                tse = tf.reduce_sum(se, name="sum_error")
+                tf.summary.histogram("error", se)
+                tf.summary.scalar("mean_error", mse)
+                return (mse, tse)
             
         # Define the loss in X-direction
         (x_mean_loss, x_total_loss) = sub_loss(target, score, "loss_x")
-            
+
         return (x_mean_loss, x_total_loss)
     
     # Train the predictor
@@ -252,9 +252,10 @@ class pTfCNNPredictor:
                 if (batchEnd > trainingSet.numSamples):
                     batchEnd = trainingSet.numSamples
 
-                # The input is arranged as (rows=samples x colums=features)
-                eyeL = trainingSet.eyeL[batchStart:batchEnd,:]
-                targetX = trainingSet.targetX[batchStart:batchEnd]
+                # The input is arranged as (axis0=samples)
+                eyeL = trainingSet.eyeL[batchStart:batchEnd,:,:,0:4]
+                # Reshape this into a column vector
+                targetX = np.reshape(trainingSet.targetX[batchStart:batchEnd], [-1,1]) 
                 result = self.session.run(opList,
                                           feed_dict={self.eyeL : eyeL,
                                                      self.targetX : targetX})
@@ -277,8 +278,8 @@ class pTfCNNPredictor:
                     s  = str(i)+","
                     s += str(batchStart)+","
                     s += str(meanLoss)+","
-                    s += "{},".format(predX)
-                    s += "{},".format(targetX)
+                    s += "\n{},".format(predX.T)
+                    s += "\n{},".format(targetX.T)
                     s += "\n"
                     self.logFH.write(s)
 
