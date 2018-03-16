@@ -27,27 +27,27 @@ args = parser.parse_args()
 image_space = {}
 image_space['image_x'] = 32
 image_space['image_y'] = 32
-image_space['image_c'] = 1
+image_space['image_c'] = 4
 space['image'] = image_space
 
 space['num_conv_layers'] = 3
 
 conv_layer_0_space = {}
-conv_layer_0_space['filter'] = [ 3, 16 ]
+conv_layer_0_space['filter'] = [ 3, 32 ]
 conv_layer_0_space['stride'] = 1
 conv_layer_0_space['pooling'] = [1, 1]
 space['conv_layer_0'] = conv_layer_0_space
 
 conv_layer_1_space = {}
-conv_layer_1_space['filter'] = [ 3, 64 ]
+conv_layer_1_space['filter'] = [ 5, 64 ]
 conv_layer_1_space['stride'] = 1
 conv_layer_1_space['pooling'] = [2, 2]
 space['conv_layer_1'] = conv_layer_1_space
 
 conv_layer_2_space = {}
-conv_layer_2_space['filter'] = [ 3, 64 ]
+conv_layer_2_space['filter'] = [ 5, 64 ]
 conv_layer_2_space['stride'] = 1
-conv_layer_2_space['pooling'] = [1, 1]
+conv_layer_2_space['pooling'] = [2, 2]
 space['conv_layer_2'] = conv_layer_2_space
 
 space['num_fc_layers'] = 3
