@@ -3,12 +3,13 @@
 
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 class pData:
     # This holds the data from the training/test set
 
     def __init__(self,
-                 imSize=[32,32, 1],
+                 imSize=[32, 32, 4],
                  verbose=False):
         self.verbose = verbose
         self.imSize = imSize
@@ -56,20 +57,42 @@ class pData:
 
         # Read the data into an array
         print "Reading video..."
-        dim = []
-        dim.append(videoFrames)
-        dim.extend(self.imSize)
-        size = tuple(self.imSize[0:2])
-        print "Video dimensions: {} , {}".format(dim,size)
-        self.dataFrames = np.empty(dim)
+        frameDim = tuple(self.imSize[0:2])
+        videoDim = [videoFrames]
+        videoDim.extend(self.imSize)
+        print "Video dimensions: {}".format(videoDim)
+        self.dataFrames = np.empty(videoDim)
         for i in range(0,videoFrames):
             ret, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            self.dataFrames[i] = np.reshape(cv2.resize(gray, size), self.imSize)
+            self.dataFrames[i,:,:,0:3] = cv2.resize(frame, frameDim)*1.0/255
+            pupils = np.zeros(np.shape(gray))
 
-            cv2.imshow('frame',gray)
+            # Attempt to highlight the pupils in the image
+            circles = cv2.HoughCircles(gray,
+                                       cv2.HOUGH_GRADIENT,
+                                       dp=128,
+                                       minDist=2000,
+                                       minRadius=50,
+                                       maxRadius=150)
+            if (circles is not None):
+                print "Frame {}, Circles: {}".format(i, len(circles))
+                for c in circles[0]:
+                    print "circle: {}".format(c)
+                    cv2.circle(frame, (c[0],c[1]), c[2], (0,255,0),  5)
+
+                    # Write an alpha channel with the pupils
+                    cv2.circle(pupils, (c[0],c[1]), c[2], (255,255,255), -1)
+                    
+                #self.pupils[i] = np.reshape(cv2.resize(frame, size), self.imSize)
+                
+            # Resize the pupil locations and write to alpha channel
+            self.dataFrames[i,:,:,3] = cv2.resize(pupils, frameDim)*1.0/255
+                
+            cv2.imshow("Frame",frame)
             cv2.waitKey(10)
 
+            
         print "Done."
 
         print "Reading homography matricies..."
@@ -106,14 +129,16 @@ class pData:
                       directory="."):
         
         print "Flattening and writing dataset..."
+
         # Flatten the image to a vector. One row per frame
         # Append the target to the end of the row
         flattened = np.reshape(self.dataFrames, [-1, np.prod(self.imSize)])
+        print np.shape(flattened)
 
         dataset = np.hstack([flattened, self.target])
         dataFile = directory+"/"+basename+".txt"
 
-        np.savetxt(dataFile, dataset, delimiter=',', fmt='%1d')
+        np.savetxt(dataFile, dataset, delimiter=',')
         print "Done."
 
         
@@ -138,6 +163,7 @@ class pData:
         eyeLData = d[:,0:np.prod(self.imSize)]
         # reshape 
         self.eyeL = np.reshape(eyeLData, eyeLSize)
+        print np.shape(self.eyeL)
         
         self.targetX = d[:,np.prod(self.imSize)]
 
