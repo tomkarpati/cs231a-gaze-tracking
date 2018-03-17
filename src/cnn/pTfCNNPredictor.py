@@ -35,9 +35,11 @@ class pTfCNNPredictor:
         self.init_logging()
 
         # Setup the loss and build the optimizer
-        (self.meanLoss, self.totalLoss) = self.loss_func(self.targetX,self.scoreX)
+        (self.meanLoss, self.totalLoss) = self.loss_func(self.targetVec,self.scoreVec)
         self.optimizer(optType=optType)
 
+        self.saver = tf.train.Saver()
+        
         self.init_session()
         
 
@@ -60,16 +62,16 @@ class pTfCNNPredictor:
                                   name=name)
 
         self.eyeL = placeholder_eye(space['image'],"eye_l")
-        #self.eyeR = placeholder_eye(space['image'],"eye_r")
+        self.eyeR = placeholder_eye(space['image'],"eye_r")
 
-        def placeholder_target(name):
+        def placeholder_targetVec(name):
             # The class placeholders have batchx1 dimensions
-            print "Building target {}".format(name)
+            print "Building target (vector) {}".format(name)
             return tf.placeholder(tf.float32,
-                                  [None, 1],
+                                  [None, 2],
                                   name=name)
         
-        self.targetX = placeholder_target("target_x")
+        self.targetVec = placeholder_targetVec("targetVec")
         
         def placeholder_bb(name):
             print "Building bounding box input {}".format(name)
@@ -82,7 +84,8 @@ class pTfCNNPredictor:
         #self.faceBB = placeholder_bb("face_bb")
 
         print self.eyeL
-        print self.targetX
+        print self.eyeR
+        print self.targetVec
 
         # Define some functions to create our layers
         def add_conv_layer(name, x, space):
@@ -159,22 +162,29 @@ class pTfCNNPredictor:
             dim = np.prod(i.get_shape().as_list()[1:])
             return tf.reshape(i, [-1, dim])
 
-        x = self.eyeL
+        cl = self.eyeL
+        #cr = self.eyeR
+        
 
         # Add our convolutional layers
         for l in range(0,space['num_conv_layers']):
             name="conv_layer_"+str(l)
-            x = add_conv_layer(name, x, space[name])
+            cl = add_conv_layer(name, cl, space[name])
+            #cr = add_conv_layer(name, cr, space[name])
             
         # Turn this into a single vector
-        x = vectorize(x)
+        xl = vectorize(cl)
+        #xr = vectorize(cr)
 
+        # Merge the two flattened convolution outputs
+        x = xl
+        
         for l in range(0,space['num_fc_layers']):
             name="fc_layer_"+str(l)
             x = add_fc_layer(name, x, space[name])
 
-        name = "readout_x"
-        self.scoreX = add_readout_layer(name, x, space[name])
+        name = "readout_vec"
+        self.scoreVec = add_readout_layer(name, x, space[name])
 
     
     def init_logging(self, location=None):
@@ -195,21 +205,27 @@ class pTfCNNPredictor:
         print target
         print score
         
-        # Define a sub-loss for each directory(x or y)
+        # Define a sub-loss for each segment type
         def sub_loss(target, score, name):
             # Compute the error
             with tf.name_scope(name):
-                se = (target - score)**2
+                se = (tf.norm((target - score),axis=1))**2
+                print se
                 mse = tf.reduce_mean(se, name="mean_error")
+                print mse
                 tse = tf.reduce_sum(se, name="sum_error")
+                print tse
                 tf.summary.histogram("error", se)
                 tf.summary.scalar("mean_error", mse)
+
+                self.se = se
+                
                 return (mse, tse)
             
         # Define the loss in X-direction
-        (x_mean_loss, x_total_loss) = sub_loss(target, score, "loss_x")
+        (dir_mean_loss, dir_total_loss) = sub_loss(target, score, "loss")
 
-        return (x_mean_loss, x_total_loss)
+        return (dir_mean_loss, dir_total_loss)
     
     # Train the predictor
     def train(self,
@@ -219,22 +235,34 @@ class pTfCNNPredictor:
               batchSize=16):
 
         # This is the list of operations we need to run
-        opList = []
-            
+        opList = [self.meanLoss,
+                  self.totalLoss,
+                  self.scoreVec,
+                  self.se,
+                  self.tmp]
+        
+        trainOpList = []
         # Define some variables
         with tf.name_scope("train"):
-                tf.summary.scalar("Training batch mean loss", self.meanLoss)
-                
-                self.merged = tf.summary.merge_all()
-                opList.append(self.merged)
+            tf.summary.scalar("Training batch mean loss", self.meanLoss)
+            
+            self.merged = tf.summary.merge_all()
+            trainOpList.append(self.merged)
 
-        opList.extend([self.meanLoss,
-                       self.totalLoss,
-                       self.scoreX,
-                       self.tmp,
-                       self.train_step])
-        
+        trainOpList.extend(opList)
+        trainOpList.append(self.train_step)
 
+        testOpList = []
+        # Define some variables
+        with tf.name_scope("test"):
+            tf.summary.scalar("Testing epock mean loss", self.meanLoss)
+            
+            self.merged = tf.summary.merge_all()
+            testOpList.append(self.merged)
+            
+        testOpList.extend(opList)
+
+            
         # Run training
         for i in range(epochs):
             sys.stdout.write("Training: epoch {}:\n".format(i))
@@ -243,7 +271,6 @@ class pTfCNNPredictor:
             if self.logging:
                 self.logFH.write("Training:\n")
                                  
-            
             epochCorrect = 0
             epochLoss = 0
             for batchStart in range(0, trainingSet.numSamples, batchSize):
@@ -255,17 +282,17 @@ class pTfCNNPredictor:
                 # The input is arranged as (axis0=samples)
                 eyeL = trainingSet.eyeL[batchStart:batchEnd,:,:,0:4]
                 # Reshape this into a column vector
-                targetX = np.reshape(trainingSet.targetX[batchStart:batchEnd], [-1,1]) 
-                result = self.session.run(opList,
+                target = trainingSet.targetVec[batchStart:batchEnd]
+                result = self.session.run(trainOpList,
                                           feed_dict={self.eyeL : eyeL,
-                                                     self.targetX : targetX})
+                                                     self.targetVec : target})
                 if self.tensorboard:
                     summary = result[0]
                     result = result[1:]
                     self.trainWriter.add_summary(summary,(i*trainingSet.numSamples) + batchStart)
 
                     
-                (meanLoss, totalLoss, predX, tmp, train) = result
+                (meanLoss, totalLoss, predVec, se, tmp, train) = result
                 epochLoss += totalLoss
 
                 #if (not self.tmp == None):
@@ -278,8 +305,9 @@ class pTfCNNPredictor:
                     s  = str(i)+","
                     s += str(batchStart)+","
                     s += str(meanLoss)+","
-                    s += "\n{},".format(predX.T)
-                    s += "\n{},".format(targetX.T)
+                    s += str(se)+","
+                    s += "\n{},".format(predVec.T)
+                    s += "\n{},".format(target.T)
                     s += "\n"
                     self.logFH.write(s)
 
@@ -294,9 +322,34 @@ class pTfCNNPredictor:
                     sys.stdout.flush()
 
 
-            print "Total loss: {}".format(epochLoss*1.0/trainingSet.numSamples)
+            print "Epoch mean loss: {}".format(epochLoss*1.0/trainingSet.numSamples)
 
+            if (testSet is not None):
+                # For each epoch, run forward inference
+                eyeL = testSet.eyeL[:,:,:,0:4]
+                target = testSet.targetVec[:]
+                result = self.session.run(testOpList,
+                                          feed_dict={self.eyeL : eyeL,
+                                                     self.targetVec : target})
+                if self.tensorboard:
+                    summary = result[0]
+                    result = result[1:]
+                    self.trainWriter.add_summary(summary,i)
 
+                (meanLoss, totalLoss, predVec, se, tmp) = result
+                
+                if self.logging:
+                    s  = str(i)+","
+                    s += str(batchStart)+","
+                    s += str(meanLoss)+","
+                    s += str(se)+","
+                    s += "\n{},".format(predVec.T)
+                    s += "\n{},".format(target.T)
+                    s += "\n"
+                    self.logFH.write(s)
+                
+                print "Mean loss: {}".format(meanLoss)
+            
         #print "VAR: ({}) {}".format(np.shape(tmp),tmp)
         #for im in range(0,np.size(tmp,axis=3)):
         #    #print "filtered im {}".format(im)
@@ -312,6 +365,18 @@ class pTfCNNPredictor:
         pass
 
 
+    def save(self):
+        path = "./model.ckpt"
+        save_path = self.saver.save(self.session, path)
+        print("Model saved in path: %s" % save_path)
+
+    def load(self):
+        # Restore variables from disk.
+        path = "./model.ckpt"
+        self.saver.restore(self.session, path)
+        print("Model loaded from path: %s" % path)
+
+        
     def optimizer(self,
                   optType='gradient',
                   learningRate=0.01):
