@@ -21,7 +21,8 @@ print "Running "+str(sys.argv)
 space = {}
 
 parser = argparse.ArgumentParser(description="predictor option parser")
-parser.add_argument('dataset', help="Dataset name")
+parser.add_argument('trainset', help="Training dataset name")
+parser.add_argument('valset', help="Validation dataset name")
 args = parser.parse_args()
 
 image_space = {}
@@ -54,27 +55,32 @@ space['num_fc_layers'] = 3
 space['fc_layer_0'] = 1024
 space['fc_layer_1'] = 1024
 space['fc_layer_2'] = 1024
-space['readout_x'] = 1
+space['readout_vec'] = 2
 
 # Build the predictor
 predictor = p.pTfCNNPredictor(space,
                               tensorboard=True,
                               logging=True,
                               verbose=True)
+predictor.load()
+
 
 # Load the dataset
-data = d.pData(verbose=True)
-data.load_dataset(filename=args.dataset)
+trainData = d.pData(verbose=True)
+trainData.load_dataset(filename=args.trainset)
+valData = d.pData(verbose=True)
+valData.load_dataset(filename=args.valset)
 
 # Collect some stats for the input.
-print "image min: {}".format(np.min(data.eyeL))
-print "image max: {}".format(np.max(data.eyeL))
-print "image mean: {}".format(np.mean(data.eyeL))
-print "target x min: {}".format(np.min(data.targetX))
-print "target x max: {}".format(np.max(data.targetX))
-print "target x mean: {}".format(np.mean(data.targetX))
+print "image min: {}".format(np.min(trainData.eyeL))
+print "image max: {}".format(np.max(trainData.eyeL))
+print "image mean: {}".format(np.mean(trainData.eyeL))
+print "target x min: {}".format(np.min(trainData.targetVec, axis=0))
+print "target x max: {}".format(np.max(trainData.targetVec, axis=0))
+print "target x mean: {}".format(np.mean(trainData.targetVec, axis=0))
 
 # Train this thing
-predictor.train(trainingSet=data,
-                testSet=None,
+predictor.train(trainingSet=trainData,
+                testSet=valData,
                 epochs=100)
+
