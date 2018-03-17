@@ -79,14 +79,18 @@ class pTfCNNPredictor:
                                                4],
                                   name=name)
         
-        #self.eyeLBB = placeholder_bb("eye_l_bb")
-        #self.eyeRBB = placeholder_bb("eye_r_bb")
-        #self.faceBB = placeholder_bb("face_bb")
+        self.eyeLBB = placeholder_bb("eye_l_bb")
+        self.eyeRBB = placeholder_bb("eye_r_bb")
+        self.faceBB = placeholder_bb("face_bb")
 
         print self.eyeL
         print self.eyeR
         print self.targetVec
+        print self.eyeLBB
+        print self.eyeRBB
+        print self.faceBB
 
+        
         # Define some functions to create our layers
         def add_conv_layer(name, x, space):
             print "Building convolutional layer {}, with input {}, and space {}".format(name, x, space)
@@ -106,7 +110,7 @@ class pTfCNNPredictor:
                                                strides=space['pooling'][1],
                                                name=name)
                 
-                if name=="conv_layer_0":
+                if name=="conv_layer_0_l":
                     print "storing {}".format(name)
                     self.tmp = conv
 
@@ -163,21 +167,25 @@ class pTfCNNPredictor:
             return tf.reshape(i, [-1, dim])
 
         cl = self.eyeL
-        #cr = self.eyeR
+        cr = self.eyeR
         
 
         # Add our convolutional layers
         for l in range(0,space['num_conv_layers']):
             name="conv_layer_"+str(l)
-            cl = add_conv_layer(name, cl, space[name])
-            #cr = add_conv_layer(name, cr, space[name])
+            cl = add_conv_layer(name+"_l", cl, space[name])
+            cr = add_conv_layer(name+"_r", cr, space[name])
             
         # Turn this into a single vector
         xl = vectorize(cl)
-        #xr = vectorize(cr)
+        xr = vectorize(cr)
 
         # Merge the two flattened convolution outputs
-        x = xl
+        x = tf.concat([xl,
+                       xr,
+                       self.eyeLBB,
+                       self.eyeRBB,
+                       self.faceBB], axis=1)
         
         for l in range(0,space['num_fc_layers']):
             name="fc_layer_"+str(l)
@@ -281,10 +289,18 @@ class pTfCNNPredictor:
 
                 # The input is arranged as (axis0=samples)
                 eyeL = trainingSet.eyeL[batchStart:batchEnd,:,:,0:4]
+                eyeR = trainingSet.eyeR[batchStart:batchEnd,:,:,0:4]
+                eyeLBB = trainingSet.eyeLBB[batchStart:batchEnd,:]
+                eyeRBB = trainingSet.eyeRBB[batchStart:batchEnd,:]
+                faceBB = trainingSet.faceBB[batchStart:batchEnd,:]
                 # Reshape this into a column vector
                 target = trainingSet.targetVec[batchStart:batchEnd]
                 result = self.session.run(trainOpList,
                                           feed_dict={self.eyeL : eyeL,
+                                                     self.eyeR : eyeR,
+                                                     self.eyeLBB : eyeLBB,
+                                                     self.eyeRBB : eyeRBB,
+                                                     self.faceBB : faceBB,
                                                      self.targetVec : target})
                 if self.tensorboard:
                     summary = result[0]

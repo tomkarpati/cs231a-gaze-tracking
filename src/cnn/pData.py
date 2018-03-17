@@ -163,10 +163,29 @@ class pData:
         eyeLData = d[:,0:np.prod(self.imSize)]
         # reshape 
         self.eyeL = np.reshape(eyeLData, eyeLSize)
+        self.eyeR = self.eyeL
+        self.eyeLBB = np.tile([0, 0, 32, 32],(self.numSamples,1))
+        self.eyeRBB = np.tile([0, 0, 32, 32],(self.numSamples,1))
+        self.faceBB = np.tile([0, 0, 32, 32],(self.numSamples,1))
         print np.shape(self.eyeL)
+        print np.shape(self.eyeR)
+        print np.shape(self.eyeLBB)
+        print np.shape(self.eyeRBB)
+        print np.shape(self.faceBB)
 
         vecStart = np.prod(self.imSize)
+        
         self.targetVec = d[:,vecStart:vecStart+2]
 
+        print self.targetVec
+        minTargetVec = np.min(self.targetVec,axis=0)
+        maxTargetVec = np.max(self.targetVec,axis=0)
+
+        self.targetVec = self.targetVec - (maxTargetVec-minTargetVec)/2
+        self.targetVec = self.targetVec/(maxTargetVec - minTargetVec)
+
+
+        print self.targetVec
+        
         return
     
