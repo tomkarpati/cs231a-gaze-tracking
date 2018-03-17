@@ -164,8 +164,9 @@ class pData:
         # reshape 
         self.eyeL = np.reshape(eyeLData, eyeLSize)
         print np.shape(self.eyeL)
-        
-        self.targetX = d[:,np.prod(self.imSize)]
+
+        vecStart = np.prod(self.imSize)
+        self.targetVec = d[:,vecStart:vecStart+2]
 
         return
     
