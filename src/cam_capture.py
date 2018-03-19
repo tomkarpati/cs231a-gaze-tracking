@@ -34,7 +34,7 @@ def desktop_drawing(facebox_var,eyebox_var):
     .reshape((printscreen_pil.size[1],printscreen_pil.size[0],4))
     keyboard = cv2.imread('mac_keyboard.jpg',0)
     #print keyboard.shape
-    x,y = 25,25
+    x,y = 50,50
     start_time = time.time()
     training_start = time.time()
     flipflopX = True
@@ -64,11 +64,11 @@ def desktop_drawing(facebox_var,eyebox_var):
             tempScreen = np.copy(printscreen_numpy)
             cv2.namedWindow('window', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty('window', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            #cv2.rectangle(tempScreen,(x,y),(x+150,y+150),(0,255,0),2)
+            cv2.rectangle(tempScreen,(x*2-75,y*2-75),(x*2+75,y*2+75),(0,255,0),-1)
             pyautogui.moveTo(x, y)
             cv2.imshow('window',tempScreen)
             if  time.time()-start_time > 1:
-                if(x > 1250):
+                if(x > 1200):
                     flipflopX = False
                 if(flipflopX==True):
                     x = x + 25
