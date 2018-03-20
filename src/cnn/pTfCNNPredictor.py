@@ -234,7 +234,79 @@ class pTfCNNPredictor:
         (dir_mean_loss, dir_total_loss) = sub_loss(target, score, "loss")
 
         return (dir_mean_loss, dir_total_loss)
-    
+
+    # Train on-line
+    def train_on_line(self,
+                      counter,
+                      eyeL,
+                      eyeR,
+                      eyeLBB,
+                      eyeRBB,
+                      faceBB,
+                      target):
+        
+        opList = [self.meanLoss,
+                  self.scoreVec,
+                  self.se,
+                  self.tmp]
+        trainOpList = []
+
+        if self.tensorboard:
+            # Define some variables
+            with tf.name_scope("train"):
+                tf.summary.scalar("Training mean loss", self.meanLoss)
+            
+            self.merged = tf.summary.merge_all()
+            trainOpList.append(self.merged)
+
+        trainOpList.extend(opList)
+        trainOpList.append(self.train_step)
+
+        # Run training
+        sys.stdout.write("Training ({}) - target: {}".format(counter, target))
+        sys.stdout.flush()
+
+        if self.logging:
+            s = "Training ({}): eyeLBB: {}, eyeRBB: {}, faceBB: {}".format(counter, eyeLBB, eyeRBB, faceBB)
+            self.logFH.write(s)
+
+            # Reshape to match None as first dimension
+            result = self.session.run(trainOpList,
+                                      feed_dict={self.eyeL : eyeL,
+                                                 self.eyeR : eyeR,
+                                                 self.eyeLBB : eyeLBB,
+                                                 self.eyeRBB : eyeRBB,
+                                                 self.faceBB : faceBB,
+                                                 self.targetVec : target})
+            if self.tensorboard:
+                summary = result[0]
+                result = result[1:]
+                self.trainWriter.add_summary(summary)
+
+                    
+            (meanLoss, predVec, se, tmp, train) = result
+            
+            if self.logging:
+                s  = str(meanLoss)+","
+                s += str(se)+","
+                s += "\n{},".format(predVec.T)
+                s += "\n{},".format(target.T)
+                s += "\n"
+                self.logFH.write(s)
+
+            if self.verbose:
+                #print "Training batch @{}: correct {}".format(batchStart,
+                #                                              num_correct)
+                #print "Loss: {}".format(meanLoss)
+                #print "Accuracy: {}".format(accuracy)
+                pass
+            else:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+
+        return predVec
+                
+                    
     # Train the predictor
     def train(self,
               trainingSet,
@@ -377,9 +449,75 @@ class pTfCNNPredictor:
 
 
             
-    def predict(self):
-        pass
+    def predict(self,
+                counter,
+                eyeL,
+                eyeR,
+                eyeLBB,
+                eyeRBB,
+                faceBB,
+                target):
+        
+        opList = [self.meanLoss,
+                  self.scoreVec,
+                  self.se,
+                  self.tmp]
+        predictOpList = []
 
+        if self.tensorboard:
+            # Define some variables
+            with tf.name_scope("infer"):
+                tf.summary.scalar("Inference mean loss", self.meanLoss)
+            
+            self.merged = tf.summary.merge_all()
+            predictOpList.append(self.merged)
+
+        predictOpList.extend(opList)
+
+        # Run training
+        sys.stdout.write("Testing ({}) - target: {}".format(counter, target))
+        sys.stdout.flush()
+
+        if self.logging:
+            s = "Testing ({}): eyeLBB: {}, eyeRBB: {}, faceBB: {}".format(counter, eyeLBB, eyeRBB, faceBB)
+            self.logFH.write(s)
+
+            # Reshape to match None as first dimension
+            result = self.session.run(predictOpList,
+                                      feed_dict={self.eyeL : eyeL,
+                                                 self.eyeR : eyeR,
+                                                 self.eyeLBB : eyeLBB,
+                                                 self.eyeRBB : eyeRBB,
+                                                 self.faceBB : faceBB,
+                                                 self.targetVec : target})
+            if self.tensorboard:
+                summary = result[0]
+                result = result[1:]
+                self.trainWriter.add_summary(summary)
+
+                    
+            (meanLoss, predVec, se, tmp) = result
+            
+            if self.logging:
+                s  = str(meanLoss)+","
+                s += str(se)+","
+                s += "\n{},".format(predVec.T)
+                s += "\n{},".format(target.T)
+                s += "\n"
+                self.logFH.write(s)
+
+            if self.verbose:
+                #print "Testing batch @{}: correct {}".format(batchStart,
+                #                                              num_correct)
+                #print "Loss: {}".format(meanLoss)
+                #print "Accuracy: {}".format(accuracy)
+                pass
+            else:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+
+        return predVec
+                
 
     def save(self):
         path = "./model.ckpt"
