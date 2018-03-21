@@ -86,7 +86,7 @@ The existing commercial solution available require external hardware
 being attached to existing device\cite{eyetrackerlist}\cite{tobii_1} This makes eye tracking an
 expensive and unreachable solution for many. These solutions are based
 on external infrared light source and rely on the reflection of the
-light from the user’s pupil to identify point of user interest. We hope to
+light from the user?s pupil to identify point of user interest. We hope to
 utilize the built in web camera of our system and eliminate the necessity
 of additional hardware such as external light sources with help of a
 well trained convolutional neural network.
@@ -100,15 +100,21 @@ well trained convolutional neural network.
   \end{figure}
 
 A brief introduction of existing solution mechanism can be seen Figure~\ref{fig:existsol}.
+\section{Related Work}
+Eye tracking has being studied over hundred years, a great deal of research has gone into studies of the mechanisms and dynamics of eye rotation, but the goal of eye- tracking is most often to estimate gaze direction.  The papers which closely relevant to our work using CNN are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{zhaomeng}.
 
-\section{Technical Approach}
-The system is designed to run 2 threads, one thread to capture 
+In the paper "Eye Tracking for Everyone", authors implemented solution for Apple iOS mobile devices, it used iOS libraries to identify face and eye. Author used crowd sourcing to collect a large scale reliable dataset. The training of the system required manual intervention, and user to physically interact with the device. 
+
+In "Webcam-Based Eye Movement Analysis Using CNN" authors Meng and Zhao used take a different approach at collecting data, they utilized widely popular web camera to capture user image for training. Their experiment obtained a large manually sanitized data to test their neural network. 
+
+There are some other non-CNN based experiments based on paper by Fabian Timm - "Accurate Eye center localization by means of Gradient". 
+
+\section{Our Approach}
+The system was originally  designed to run 2 threads, one thread to capture 
 and validate input from webcam and another to process the 
 captured input. The second thread processes the captured and 
 sanitized input through our convolutional neural network and 
-obtains the point of user interest on the screen. In following section 
-we explain the break down of system from image capturing 
-to evaluating point of interest.  
+obtains the point of user interest on the screen. We merged these 2 threads to improve reliability, we face some lag in response as a compromise. In following section we explain the break down of system from image capturing  to evaluating point of interest.  
 
 \subsection{Image capture and face/eye detection}
 We implemented the system in Python 2.7 using the OpenCV libraries for 
@@ -159,15 +165,6 @@ original size of the eyes in the original video frame. The size of
 a network that is too large. It is in line with work that has come
 before.
 
-\begin{figure}
-  \begin{center}
-    \includegraphics[width=\linewidth]{gaze-tracking-cnn-arch}
-  \end{center}
-  \caption{Neural Network Architecture}
-  \label{fig.cnn-arch}
-\end{figure}
-
-
 The images are fed into a bank of 16xs convolutional
 filters. This results in an output of 32x32x16 outputs. The filter
 kernels have support of 5 pixels in the x- and y-axes. The output of
@@ -201,7 +198,7 @@ of Texas at Arlington\cite{eyetracking}. This provides a mapping from
 a video of eyes to locations in 3D space where the gaze of a user is
 focusing their attention. The dataset consists of data captured from
 20 subjects. The dataset for each subject consists of a video of the
-user’s eye, transform matrices that relate the user’s eye and the
+user?s eye, transform matrices that relate the user?s eye and the
 screen of a display, and the target location on the screen that the
 subject is looking at. There are 6 scenarios for each of the 20
 users. The transform and the target locations are provided per frame
@@ -223,6 +220,7 @@ in the Evaluation section of this report.
 \subsection{Neural Network}
 We currently have the neural network implemented in TensorFlow, but
 has not been trained yet with our dataset.
+
 
 \subsection{Timeline}
 \begin{itemize}
@@ -246,8 +244,7 @@ has not been trained yet with our dataset.
 We propose to evaluate our results by having the user follow an object
 around the screen on a known path (Figure~\ref{fig:originalpath}). 
 This would be our target. We can then compute the gaze of the user from 
-the observations by the system (Figure~\ref{fig:generatedpath}). 
-We can compute the error between the computed target from the
+the observations by the system (Figure~\ref{fig:generatedpath}). We can compute the error between the computed target from the
 gaze of the user and the known target location. From these two
 measurements we can compute the mean squared error between the target
 and the computed gaze location. We hope to achieve results that are
@@ -260,10 +257,9 @@ a user is looking at, and even use the system as an input device.
   \begin{center}
     \includegraphics[width=\linewidth]{predicted_object_path}
   \end{center}
-  \caption{Path generated by tracking user’s eye.}
+  \caption{Path generated by tracking user?s eye.}
   \label{fig:generatedpath}
 \end{figure}
-
 
 
 {\small
@@ -296,7 +292,7 @@ a user is looking at, and even use the system as an input device.
     Information Processing Systems}. 1994.
 \bibitem{cazzato}
   Cazzato, D., Dominio, F., Manduchi, R., and Castro, S. M.,
-  “Real-time Gaze Estimation Via Pupil Center Tracking”,
+  ?Real-time Gaze Estimation Via Pupil Center Tracking?,
   Paladyn. \textit{Journal of Behavioral Robotics}, In Press.
 \bibitem{li}
   Li, Tianxing, et al. "Ultra-Low Power Gaze Tracking for Virtual
