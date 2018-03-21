@@ -50,46 +50,60 @@ Stanford University \\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-This paper presents a low cost alternative to traditional eye-tracking
-interface to help physically impaired users interact. We propose to
-implement an eye-tracking system utilizing a single camera. We present a
-Convolutional Neural Networks based approach which eliminates the
-necessity of external light source as required by existing solution.
+This paper presents a low cost alternative to traditional
+gaze-tracking systems to help pysically impaired uses interact with
+machines. We propose a passive system which can utilize the integrated
+cameras already present in most laptops and tablets available
+today. The system utilizes face and eye tracking to locate the user in
+the camera frame and a convolutional neural network to infer the
+point-of-gaze of the user from the captured image from the integrated
+camera. Due to the passive nature of our system, it doesn't require
+the expensive active external lighting sources required by most
+existing solutions. The system also doesn't require the user to remain
+in a fixed position or to immobilize their head to use the system.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
-We propose to implement an eye-tracking system utilizing a single
-camera. Gaze tracking has numerous application in human computer
-interfaces from use as input for the impaired\cite{calvo}, to
+A gaze-tracking system has numerous application in human computer
+interfaces, from use as an input modality for the imparired\cite{calvo}, to
 determination of region of interest for augmented reality and image
-processing. Our system would use a camera on a laptop and determine
-the target of the users gaze. This would then be used to move a cursor
-around a graphical keyboard on the display which could be used for
-input. Our design results in a multi-segment system. We propose to
-first segment the face from the image. Then the left and right eyes
-are each segmented from the face. The eyes are then fed into a trained
-neural network to determine the location of focus for the user. We
-will examine work that has already been done in the past on gaze
-tracking to build upon. The literature contains systems from strictly
-classical approaches to systems that are built on neural networks for
-the processing \cite{krafka} \cite{mcmurrough} \cite{weidenbacher}
-\cite{baluja} \cite{cazzato} \cite{li}. We hope to be able to use a
-combination of the two to achieve good results. While existing
-commercial solutions use external light source and additional hardware
-to implement eye tracking, we expect to utilize openly available gaze
-eye-tracking dataset to eliminate the requirement for any additional
-hardware.
+processing. The goal of gaze-tracking is to determine the location
+that a user is looking at. For aiding the impaired, the system would
+determine the location on the screen that a user is looking, and then
+move the cursor to that location. This can be used as a form of input
+for those that cannot move a mouse or use a keyboard. This
+can then be used with in on-screen keyboard to interact with a
+system.
 
-\section{Problem Statement}
-The existing commercial solution available require external hardware
-being attached to existing device\cite{eyetrackerlist}\cite{tobii_1} This makes eye tracking an
-expensive and unreachable solution for many. These solutions are based
-on external infrared light source and rely on the reflection of the
-light from the user’s pupil to identify point of user interest. We hope to
-utilize the built in web camera of our system and eliminate the necessity
-of additional hardware such as external light sources with help of a
-well trained convolutional neural network.
+The system proposed is a completely passive system that uses a single
+camera. The system attempts to eliminate the need for expensive
+external equipment, just using the integrated camera available on most
+laptops and tablets. The system is composed of two parts. The first
+part is to determine the location of the user in the frame of the camera, and the
+location of the eyes. This information is then fed into a
+convolutional neural network to determine the point of gaze of the
+user from the information determined from the camera image.
+
+Beyond the location of the eye within the eye socket, the system must
+also determine the head pose since the user is not required to have
+their head constrained or immobilised, and as such the location and
+pose of the head is not known a priori. This requires that the
+convolutional network must also be passed the location of the eyes in
+the frame and the location of the eyes relative to the face to effectively be
+able to determine the pose of the users head.
+
+
+\section{Existing Solutions}
+Many existing systems rely on external
+devices\cite{eyetrackerlist}\cite{tobii_1}, or require the user to
+have their head immobilized or wear a camera attached to their
+head. This makes eye tracking an expensive and unreachable solution
+for many. Some of these are based on infrared light sources and rely
+on the reflection of the light from the user's pupils to identify the
+point of user interest. Our system hopes to work around the use of
+these external devices. A brief introduction of existing solution
+mechanism can be seen Figure~\ref{fig:existsol}.
 
 \begin{figure}
   \begin{center}
@@ -99,9 +113,24 @@ well trained convolutional neural network.
   \label{fig:existsol}
   \end{figure}
 
-A brief introduction of existing solution mechanism can be seen Figure~\ref{fig:existsol}.
+
+The literature contains systems that are built with strictly classical
+approaches to those that are built on more modern neural networks for
+processing\cite{krafka}\cite{mcmurrough}\cite{weidenbacher}\cite{baluja}\cite{cazzato}\cite{li}. Our
+system hopes to use both methods where we can preprocess the data that
+is fed into the network using classical methods to aid in the
+processing. We hope to leverage the existing dataset that was produced
+by the group at University of Texas, Arlington\cite{mcmurrough}. Their
+work contains several videos with synchronized homographies that link
+the location and pose of the eyes with the location of the screen
+relative to each other. This solution however requires a user to have
+a head mounted camera to capture a video of the eyes moving in the
+users eye sockets. While this may be effective, it can be cumbersome
+for the user.
+
 
 \section{Technical Approach}
+TK -- ?? Is this still correct?
 The system is designed to run 2 threads, one thread to capture 
 and validate input from webcam and another to process the 
 captured input. The second thread processes the captured and 
@@ -110,7 +139,12 @@ obtains the point of user interest on the screen. In following section
 we explain the break down of system from image capturing 
 to evaluating point of interest.  
 
+
+
 \subsection{Image capture and face/eye detection}
+TK -- Need more information on face and eye detection. diagrams,
+equations, etc...
+
 We implemented the system in Python 2.7 using the OpenCV libraries for 
 image processing tasks. The use of OpenCV gives us an easy hardware 
 abstraction layer to video capture and display peripherals. We use 
@@ -146,18 +180,65 @@ are isolated from the face, then images  of the face and the location
 of eyes are fed into a neural network to determine the location of the
 gaze.
 
+\subsection{Eye Image Preprocessing}
+To aid the neural network, the input data images are preprocessed. We
+perform the preprocessing step to aid in locating the pupils withing
+the images of the eyes. The pupils of the eyes are distinctive in that
+they are, in general, the only large round thing in the image. Also,
+due to the fact that the iris tends to be of a darker color than the
+sclera and should be easily detectable in a grayscale image of the
+eye when looking at the gradient of the image. The pupils are
+attempted to be located by performing a search for circles in the
+Hough space that are of a certain size. The pupils are then added as a
+mask to the eye image as a fourth channel in addition to the RGB
+images of the eyes. This information is provided as a hint to the
+neural network for processing the image. The search for pupils is
+limited to circles to filter out false matches. The radius of the pupil
+in the image is limited to a range between 1/10 to 1/4 relative to the
+bounding box size. The range is computed relative to the bounding box
+sizes to account for changes in size of the detected eyes in the
+captured frames that may account from the user being closer or farther
+from the camera. 
 
-\subsection{Neural Network}
-The neural network is implemented in TensorFlow. The neural network is
-a multilayer classifier where the inputs are the extracted images of
-the eyes and the bounding boxes for the eyes and the face in the
-original image. The two images of the eyes are 32x32x3 images where
-the extracted images of the eyes are scaled to a set size. This gives
-us a fixed image size to feed into the network invariant of the
-original size of the eyes in the original video frame. The size of
-32x32 should be large enough to provide enough detail without creating
-a network that is too large. It is in line with work that has come
-before.
+\begin{figure}[!h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{hough-uta-dataset.png}
+    \caption{Detection of pupils using Hough space search}
+    \label{fig:hough-pupils-uta}
+  \end{center}
+\end{figure}
+
+\begin{figure}[!h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{hough-online.png}
+    \caption{Detection of pupils during online training and
+      inferrence}
+    \label{fig:hough-online}
+  \end{center}
+\end{figure}
+
+We don't only pass the pupil mask
+to the neural network because the search in Hough space can result in
+either more or less circles in the eye image, or may be offset
+slightly from the actual pupils. To counteract this, we provide both
+the RGB image of the eye and the mask that we determine locating the
+pupils. The detection of the pupil for processing the data set is shown in
+Figure~\ref{fig:hough-pupils-uta}. During online training and testing
+we also perform a hough space search for pupils in each image of the
+eye. The results for this can be seen in Figure~\ref{fig:hough-online}
+which show the capture and processing the pupils 
+
+\subsection{Convolutional Neural Network}
+Our neural network is implemented in the TensorFlow framework. The
+network is a multilayer classifier where the inputs are the extracted
+images of both the left and the right eyes and the bounding boxes for
+both eyes and the face in the original image. The two images of the
+eyes are 32x32x4 images where the extracted images of the eyes are
+scaled to a set size. This gives us a fixed image size to feed into
+the network invariant of the original size of the eyes in the original
+video frame. The size of 32x32 should be large enough to provide
+enough detail without creating a network that is too large. It is in
+line with previous work. 
 
 \begin{figure}
   \begin{center}
@@ -194,6 +275,44 @@ segmenting the angle of gaze into 50 segments where the center output
 unit represents a gaze of 0 degrees. The x- and y- axes are separate
 here and the output is a softmax function and represents the
 probability distribution of the output in the x- and y- directions.
+
+
+
+
+\section{Material to be integrated}
+
+
+We propose to implement an eye-tracking system utilizing a single
+camera. Gaze tracking has numerous application in human computer
+interfaces from use as input for the impaired\cite{calvo}, to
+determination of region of interest for augmented reality and image
+processing. Our system would use a camera on a laptop and determine
+the target of the users gaze. This would then be used to move a cursor
+around a graphical keyboard on the display which could be used for
+input. Our design results in a multi-segment system. We propose to
+first segment the face from the image. Then the left and right eyes
+are each segmented from the face. The eyes are then fed into a trained
+neural network to determine the location of focus for the user. We
+will examine work that has already been done in the past on gaze
+tracking to build upon. The literature contains systems from strictly
+classical approaches to systems that are built on neural networks for
+the processing  We hope to be able to use a
+combination of the two to achieve good results. While existing
+commercial solutions use external light source and additional hardware
+to implement eye tracking, we expect to utilize openly available gaze
+eye-tracking dataset to eliminate the requirement for any additional
+hardware.
+
+\section{Problem Statement}
+The existing commercial solution available require external hardware
+being attached to existing device\cite{eyetrackerlist}\cite{tobii_1} This makes eye tracking an
+expensive and unreachable solution for many. These solutions are based
+on external infrared light source and rely on the reflection of the
+light from the user’s pupil to identify point of user interest. We hope to
+utilize the built in web camera of our system and eliminate the necessity
+of additional hardware such as external light sources with help of a
+well trained convolutional neural network.
+
 
 \section{Neural Network Datasets}
 We will use the Point of Gaze Eye-Tracking Dataset from the University
