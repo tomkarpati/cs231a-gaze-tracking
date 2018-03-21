@@ -48,3 +48,41 @@ def reshapeToBatch(a):
     b = np.reshape(a,dim)
     print np.shape(b)
     return b
+
+
+def generate_cnn_config(cnn_eye_size):
+    space = {}
+
+    image_space = {}
+    image_space['image_x'] = cnn_eye_size[0]
+    image_space['image_y'] = cnn_eye_size[1]
+    image_space['image_c'] = 4
+    space['image'] = image_space
+    
+    space['num_conv_layers'] = 3
+    
+    conv_layer_0_space = {}
+    conv_layer_0_space['filter'] = [ 3, 32 ]
+    conv_layer_0_space['stride'] = 1
+    conv_layer_0_space['pooling'] = [1, 1]
+    space['conv_layer_0'] = conv_layer_0_space
+    
+    conv_layer_1_space = {}
+    conv_layer_1_space['filter'] = [ 5, 64 ]
+    conv_layer_1_space['stride'] = 1
+    conv_layer_1_space['pooling'] = [2, 2]
+    space['conv_layer_1'] = conv_layer_1_space
+    
+    conv_layer_2_space = {}
+    conv_layer_2_space['filter'] = [ 5, 64 ]
+    conv_layer_2_space['stride'] = 1
+    conv_layer_2_space['pooling'] = [2, 2]
+    space['conv_layer_2'] = conv_layer_2_space
+    
+    space['num_fc_layers'] = 3
+    space['fc_layer_0'] = 1024
+    space['fc_layer_1'] = 1024
+    space['fc_layer_2'] = 1024
+    space['readout_vec'] = 2
+
+    return space
