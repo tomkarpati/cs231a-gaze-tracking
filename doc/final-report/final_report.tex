@@ -68,7 +68,6 @@ in a fixed position or to immobilize their head to use the system.
 A gaze-tracking system has numerous application in human computer
 interfaces, from use as an input modality for the imparired\cite{calvo}, to
 determination of region of interest for augmented reality and image
-<<<<<<< HEAD
 processing. The goal of gaze-tracking is to determine the location
 that a user is looking at. For aiding the impaired, the system would
 determine the location on the screen that a user is looking, and then
@@ -105,7 +104,11 @@ on the reflection of the light from the user's pupils to identify the
 point of user interest. Our system hopes to work around the use of
 these external devices. A brief introduction of existing solution
 mechanism can be seen Figure~\ref{fig:existsol}.
-=======
+
+
+
+%%%%% This needs to be resolved between two versions
+
 processing. Our system would use a camera on a laptop and determine
 the target of the users gaze. This would then be used to move a cursor
 around a graphical keyboard on the display which could be used for
@@ -133,7 +136,8 @@ light from the user?s pupil to identify point of user interest. We hope to
 utilize the built in web camera of our system and eliminate the necessity
 of additional hardware such as external light sources with help of a
 well trained convolutional neural network.
->>>>>>> 61c75e821e869eb3e68753857da855df9f90010e
+
+%%%% End resolve
 
 \begin{figure}
   \begin{center}
@@ -142,8 +146,6 @@ well trained convolutional neural network.
   \caption{Existing solutions to gaze-tracking problem}
   \label{fig:existsol}
   \end{figure}
-
-<<<<<<< HEAD
 
 The literature contains systems that are built with strictly classical
 approaches to those that are built on more modern neural networks for
@@ -163,7 +165,9 @@ for the user.
 \section{Technical Approach}
 TK -- ?? Is this still correct?
 The system is designed to run 2 threads, one thread to capture 
-=======
+
+%%%%%%% Begine resolve 
+
 A brief introduction of existing solution mechanism can be seen Figure~\ref{fig:existsol}.
 \section{Related Work}
 Eye tracking has being studied over hundred years, a great deal of research has gone into studies of the mechanisms and dynamics of eye rotation, but the goal of eye- tracking is most often to estimate gaze direction.  The papers which closely relevant to our work using CNN are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{zhaomeng}.
@@ -176,7 +180,9 @@ There are some other non-CNN based experiments based on paper by Fabian Timm - "
 
 \section{Our Approach}
 The system was originally  designed to run 2 threads, one thread to capture 
->>>>>>> 61c75e821e869eb3e68753857da855df9f90010e
+
+%%% End resolve
+
 and validate input from webcam and another to process the 
 captured input. The second thread processes the captured and 
 sanitized input through our convolutional neural network and 
@@ -285,39 +291,84 @@ line with previous work.
 
 \begin{figure}
   \begin{center}
-    \includegraphics[width=\linewidth]{gaze-tracking-cnn-arch}
+    \includegraphics[width=\linewidth]{gaze-tracking-cnn-arch-final}
   \end{center}
   \caption{Neural Network Architecture}
   \label{fig.cnn-arch}
 \end{figure}
 
+Each eye image is fed into a bank of 16 convolutional filters. This
+generates 16 sets of 32x32 filtered results. The filter kernels have
+support of 3 pixels in the x- and y-axes. Each pixel output from the
+filters is passed through a rectified linear activation function. The
+output of the first layer is then again filtered in a convolutional
+layer. This layer has a kernel with 5x5 support and generates 64
+outputs from the 32 input filter bank output. The outputs from this
+layer are again passed through a rectified linear activation function
+like before. Following the second convolutional layer, there is a max
+pooling layer with a non-overlapping 2x2 filter to reduce the
+dimensionality of the output by a factor of two in the x- and y-
+directions. This results in a 16x16x64 output. This output is then
+filtered once again through a final convolutional layer. This third
+layer has a kernel with 3x3 support and results in 64 16x16
+outputs. This filter layer is then again passed through a final
+max-pooling layer with a non-overlapping 2x2 filter. The final
+dimensionality of the output from the convolutional layers in 8x8x64.
 
-The images are fed into a bank of 16xs convolutional
-filters. This results in an output of 32x32x16 outputs. The filter
-kernels have support of 5 pixels in the x- and y-axes. The output of
-the convolutional filters is passed through a rectified linear
-activation function. Following the convolution layer, we perform max pooling with a
-non-overlapping 2x2 filter to reduce the dimentionality.
+The two separate convolutional networks are then combined with the
+bounding boxes from the face and eye detection step. Theses outputs
+from the convolutional layers for the left and right eyes are each
+flattened into a single 4096x1 vector. These two 4096 vectors and the
+bounding boxes are then all concatinated into a single 8204 vector.
 
-A second bank of convolutional filters is then convolved with the
-output of the first bank. The second set of layers is also a
-convolution and max pooling layer. The input of the second bank has
-shape of 16x16x16 inputs. The second bank has 16 input and 32 output
-channels and stride of 1. The filter kernel has support of 5
-pixels. This is essentially the same as the first layer with a
-rectified linear activation function, but the dimentionality is
-smaller in the image x- and y-axes, and larger in the filter bank
-depth. The output again is passed through a max-poolong layer.
+Once all of the input features are concatinated together into a single
+vector, this is then fed into three fully connected layers of 1024
+hidden units. The hidden units also use a rectified linear activation
+function. Finally, there is a readout layer at then end with two
+nodes. These two nodes are simply a linear combination of the previous
+1024 hidden nodes. The output nodes are the x- and y- location of the
+users gaze.
 
-Following the two convolutional layers, the output is flattened into a
-single vector and passes through a fully connected layer of 200
-units. This layer is then connected to two 50 unit output layers in
-fully connected fashion. These two sets of 50 units represent the x-
-and y- outputs of the gaze. The two sets of 50 output represent
-segmenting the angle of gaze into 50 segments where the center output
-unit represents a gaze of 0 degrees. The x- and y- axes are separate
-here and the output is a softmax function and represents the
-probability distribution of the output in the x- and y- directions.
+The loss function for the network is the simple euclidian squared
+error between the predicted x- and y- location of the users gaze and
+the ground truth x- and y- location (Equation~\ref{eq:cnn-loss}). As
+the network optimizes to minimize the loss, the simple euclidean
+distance is then also minimized.
+
+\begin{equation}
+  loss = (pred_{x,y} - target_{x,y})^2
+  \label{eq:cnn-loss}
+\end{equation}
+
+\subsection{Neural Network Datasets}
+We used the Point of Gaze Eye-Tracking Dataset from the University
+of Texas at Arlington\cite{eyetracking}. This provides a mapping from
+a video of eyes to locations in 3D space where the gaze of a user is
+focusing their attention. The dataset consists of data captured from
+20 subjects. The dataset for each subject consists of a video of the
+user’s eye, transform matrices that relate the user’s eye and the
+screen of a display, and the target location on the screen that the
+subject is looking at. There are 6 scenarios for each of the 20
+users. The transform and the target locations are provided per frame
+of the video.
+
+This data set was used to provide initial training for the neural
+network. Once we had done initial training of the network on this
+dataset, we moved the trained network to running on-line. The goal of
+initial training is to speed up the training process for gross
+optimization and then be able to fine tune the training using the
+actual system. Since the datasets that we used were for specific
+transformations between the eyes of the user and the object of the
+gaze, the system needed to be trainined to be able to determine the
+proper head pose of from the extra inputs from our system and then use
+that information to transform the outputs to the correct x- and y-
+output.
+
+
+\section{Experimental Results}
+
+
+\subsection{Network Training}
 
 
 
@@ -358,24 +409,6 @@ well trained convolutional neural network.
 
 
 \section{Neural Network Datasets}
-We will use the Point of Gaze Eye-Tracking Dataset from the University
-of Texas at Arlington\cite{eyetracking}. This provides a mapping from
-a video of eyes to locations in 3D space where the gaze of a user is
-focusing their attention. The dataset consists of data captured from
-20 subjects. The dataset for each subject consists of a video of the
-user’s eye, transform matrices that relate the user’s eye and the
-screen of a display, and the target location on the screen that the
-subject is looking at. There are 6 scenarios for each of the 20
-users. The transform and the target locations are provided per frame
-of the video. We also plan on using the comprehensive head pose and
-gaze database\cite{mcmurrough} to infer correlation between the pose
-of the head and the target that the subject is looking at.
-
-We hope to run the system in a real-time manner and compare our
-results to expected locations on the display. In this setup data that
-we capture from the camera connected to the system will be used as our
-system inputs and data to process.
-
 \section{Progress}
 Despite some initial hurdles, we are still on track in terms of milestones 
 we had initially set for ourselves. We are yet to build test framework 
