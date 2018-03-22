@@ -525,10 +525,10 @@ data set could then be shuffled, like the UTA dataset was suffled for
 training, and keep the entire system from just drifting to the last
 location of the target.
 
-Third, we should split the convolutional network into it's different
-parts. The thinking is that we can construct three networks. One for
-mapping the eye image to a relative angle of view from the eye, one
-for each of the left and right eyes. Then these outputs can be fed
+Third, we should split the convolutional network into its different
+parts. The thinking is that we can construct three networks. One
+network each for mapping the eye image to a relative angle of view
+from the eye for the left and right eyes, and then these outputs can be fed
 into a much smaller fully connected network that would perform the
 head pose transformation to the final output predicted gaze target on
 the screen. With this, we can train the two convolutional networks on
@@ -538,7 +538,7 @@ can then not train the convolutional networks, but just the final
 transformation network. This would prevent the on-line training from
 interfearing with the learned parameters for the convolutional network.
 
-Finall, We believe limited frame rate of the built in laptop and tablet front facing cameras was another 
+Finally, we believe limited frame rate of the built in laptop and tablet front facing cameras was another 
 factor in our experiment. The latest commercial solution by Tobii like "Tobii X3-120", has a sampling 
 rate of 120 frames per second, which is 10x of what our system is able to process in its current state. 
 We also believe implementing such solution on latest handheld devices like iPhoneX, which 
