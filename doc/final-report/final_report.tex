@@ -156,14 +156,16 @@ capturing to evaluating point of interest.
 \subsection{Image capture and face/eye detection}
 We use haar-cascade utilizing Viola-Jones face recognition algorithm to 
 identify face and eyes. First we capture input stream using peripheral
-interface provided by OpenCV. We convert each frame as it is captured
-to grayscale, this frame is then analyzed  using Viola-Jone's
-haar-feature based cascade classifier to identify a face. The
-Viola-Jones algorithm being utilized by underlying framework is very
-robust, high-speed and focused on face detection only. This framework
-doesn't identify the individuals. 
+interface provided by OpenCV. 
 
-A few common properties of human face are used to recognize face, for example: the human eye region is darker than the upper-cheeks and the nose bridge region is brighter than the eyes.
+We convert each frame as it is captured to grayscale, this frame is then analyzed 
+using Viola-Jone's haar-feature based cascade classifier to identify a face.  
+The Viola-Jones algorithm being utilized by underlying framework is very robust, 
+high-speed and focused on face detection only. This framework doesn't 
+identify the individuals. 
+
+A few common properties of human face are used to recognize face, for example: the human eye region is darker than the upper-cheeks and the nose bridge region is brighter than the eyes. The Viola-Jones object detector classifies images based on such feature value instead of pixels.  A feature based system operates much faster than pixel based systems. Rectangle features are computed integral image. An integral is an intermediate representation for the original image. 
+We opted out to use face detection haar-cascade provided by OpenCV, as it is already trained with more than 5000 face images and 300 million non-face images with varing poses, and varing illumination across many individuals. 
 
 \begin{figure}
   \begin{center}
