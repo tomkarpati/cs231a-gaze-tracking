@@ -262,10 +262,10 @@ Figure~\ref{fig:hough-pupils-uta}. During online training and testing
 we also perform a hough space search for pupils in each image of the
 eye. The results for this can be seen in Figure~\ref{fig:hough-online}
 which show the capture and processing the pupils. In addition, the
-proper left and right eyes needed to be determined. The list of eyes
+proper left and right eyes needed to be determined, since the list of eyes
 detected by the system is unordered. This was done by
 ordering the bounding boxes for the two eyes based on the x-location
-of the bounding box of the upper left corner. The left eye of the user
+of the bounding box's upper left corner. The left eye of the user
 (looking at the user on the screen) will always have a smaller
 x-location coordinate. This ensures that the same eye image and
 bounding box is always passed as the same input to the neural network.
