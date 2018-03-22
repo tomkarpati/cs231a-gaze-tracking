@@ -203,9 +203,40 @@ identify face and eyes.
 First we capture input stream using peripheral
 interface provided by OpenCV. We convert each 
 frame as it is captured to grayscale, this frame is then analyzed 
-using haar-feature based cascade classifier to identify a face. 
+using Viola-Jone's haar-feature based cascade classifier to identify a face.  
+The Viola-Jones algorithm being utilized by underlying framework is very robust, 
+high-speed and focused on face detection only. This framework doesn't 
+identify the individuals. 
+
+A few common properties of human face are used to recognize face, for example: the human eye region is darker than the upper-cheeks and the nose bridge region is brighter than the eyes.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\linewidth]{nose}
+  \end{center}
+  \caption{Human nose region haar-feature}
+  \label{fig:human_nose}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\linewidth]{eyes}
+  \end{center}
+  \caption{Human eye region haar-feature}
+  \label{fig:human_eyes}
+\end{figure}
+
+
 Once we have detected a face, we process frame detected 
 as face again using haar-feature based classifier to identify eyes. 
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\linewidth]{eyes_detected}
+  \end{center}
+  \caption{Eye detection using Haar-Cascade When input is identified as face.}
+  \label{fig:eyes_detected}
+\end{figure}
 
 In our initial runs we encountered difficulties with these cascade classifiers.
 This can be seen in  (Figure~\ref{fig:defensive}).
