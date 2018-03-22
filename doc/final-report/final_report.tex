@@ -228,7 +228,7 @@ Hough space that are of a certain size. The pupils are then added as a
 mask to the eye image as a fourth channel in addition to the RGB
 images of the eyes. This information is provided as a hint to the
 neural network for processing the image. The search for pupils is
-limited to circles to filter out false matches. The radius of the pupil
+limited to circles of a certain size to filter out false matches. The radius of the pupil
 in the image is limited to a range between 1/10 to 1/4 relative to the
 bounding box size. The range is computed relative to the bounding box
 sizes to account for changes in size of the detected eyes in the
