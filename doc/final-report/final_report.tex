@@ -510,6 +510,28 @@ boxes for the user features are having an overriding influence on the
 weights of the system in the connected layer, with the movement of the
 pupils inside the bounding boxes being marginalized.
 
+\section{Future Work and Directions}
+Our results seem promising, but there are some issues that will need
+to be resolved. First, we believe that the lag through the system
+should be addressed. This would aid in any training that we may need
+to perform. The closer we can get between the display of the actual
+target on the screen and the determination of where the user is
+looking would help in training such that the target and the prediction
+are correlated in time to have consistant inputs to train the
+network.
+
+Second, in order to do more training off-line and not rely on on-line
+training, to assemble a full synchronized data set offline where the
+target locations and the captured images from the camera are in sync
+with each other so that they can be used to batch train the network
+off-line. This would speed up the training time (not just of where the
+eyes are looking with respect to the eye socket, but also for
+determining the head pose off line with respect to the camera). The
+data set could then be shuffled, like the UTA dataset was suffled for
+training, and keep the entire system from just drifting to the last
+location of the target.
+
+
 
 
 \section{Material to be integrated}
