@@ -309,7 +309,7 @@ max-pooling layer with a non-overlapping 2x2 filter. The final
 dimensionality of the output from the convolutional layers in 8x8x64.
 
 The two separate convolutional networks are then combined with the
-bounding boxes from the face and eye detection step. Theses outputs
+bounding boxes from the face and eye detection step. The outputs
 from the convolutional layers for the left and right eyes are each
 flattened into a single 4096x1 vector. These two 4096 vectors and the
 bounding boxes are then all concatinated into a single 8204 vector.
@@ -317,7 +317,7 @@ bounding boxes are then all concatinated into a single 8204 vector.
 Once all of the input features are concatinated together into a single
 vector, this is then fed into three fully connected layers of 1024
 hidden units. The hidden units also use a rectified linear activation
-function. Finally, there is a readout layer at then end with two
+function. Finally, there is a readout layer at the end with two
 nodes. These two nodes are simply a linear combination of the previous
 1024 hidden nodes. The output nodes are the x- and y- location of the
 users gaze.
@@ -364,7 +364,7 @@ output.
 \subsection{Network Training}
 During initial gross training, we were able to achive pretty good
 results on the UTA dataset\cite{eyetracking}. The system was able to
-train both convolutional pipeline quickly over 100 epochs with batch
+train both convolutional pipelines quickly over 100 epochs with batch
 size of 16 samples. The initial training took a little over an hour on
 a MacBook Pro running TensorFlow.
 
