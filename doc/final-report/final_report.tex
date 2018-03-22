@@ -289,13 +289,13 @@ video frame. The size of 32x32 should be large enough to provide
 enough detail without creating a network that is too large. It is in
 line with previous work. 
 
-\begin{figure}
+\begin{figure*}
   \begin{center}
-    \includegraphics[width=\linewidth]{gaze-tracking-cnn-arch-final}
+    \includegraphics[width=\textwidth]{gaze-tracking-cnn-arch-final}
   \end{center}
   \caption{Neural Network Architecture}
   \label{fig.cnn-arch}
-\end{figure}
+\end{figure*}
 
 Each eye image is fed into a bank of 16 convolutional filters. This
 generates 16 sets of 32x32 filtered results. The filter kernels have
@@ -369,7 +369,44 @@ output.
 
 
 \subsection{Network Training}
+During initial gross training, we were able to achive pretty good
+results on the UTA dataset\cite{eyetracking}. The system was able to
+train both convolutional pipeline quickly over 100 epochs with batch
+size of 16 samples. The initial training took a little over an hour on
+a MacBook Pro running TensorFlow.
 
+\begin{figure}[!h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{tb-gross-training-mse-loss.png}
+    \caption{Network training loss}
+    \label{fig:train-loss}
+  \end{center}
+\end{figure}
+
+Following the initial training we were getting a mean squared error of
+approximagely 0.07 where the range of the gaze of the user was
+normalized to the range -0.5 to +0.5. The mean of the squared error
+seemed to be skewed by periodic large errors. The intuition behind
+this is the the error appears to be very large due to the eye
+blinking. The median squared error is much smaller - around 0.03,
+again with the range normalized. After initial training, the network
+was further refined and valiadated. During this training, the median
+training error was refined down to approximately 0.0142, and the
+median down the 0.017. With the normalized gaze range, this
+corresponds to a median error distance of approximagely 13\% of the
+field of view of the viewer.
+
+One of the issues that we faced was the problem of the head pose.
+The network needed to still be trained online due to calibrate where
+the user was looking with the screen relative to the user's head.
+Since the system should be able to determine the head pose,
+that training needed to be done online so that we can construct the
+transformation between the location of the eyes in 3-D space and the
+target that the use was looking at. Once that transformation can be
+determined then vector that is coming out of the image of the eyes
+that represents the direction that the use is looking can be
+intersected with the location of the plane of the screen in 3-D
+space.
 
 
 
