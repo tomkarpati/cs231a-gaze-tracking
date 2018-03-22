@@ -532,7 +532,7 @@ from the eye for the left and right eyes, and then these outputs can be fed
 into a much smaller fully connected network that would perform the
 head pose transformation to the final output predicted gaze target on
 the screen. With this, we can train the two convolutional networks on
-the images of the eyes, and then we can perform and head pose training
+the images of the eyes, and then we can perform head pose training
 separately on-line in the system. Since the networks are separate, we
 can then not train the convolutional networks, but just the final
 transformation network. This would prevent the on-line training from
