@@ -528,63 +528,6 @@ location of the target.
 
 
 
-
-\section{Material to be integrated}
-
-
-We propose to implement an eye-tracking system utilizing a single
-camera. Gaze tracking has numerous application in human computer
-interfaces from use as input for the impaired\cite{calvo}, to
-determination of region of interest for augmented reality and image
-processing. Our system would use a camera on a laptop and determine
-the target of the users gaze. This would then be used to move a cursor
-around a graphical keyboard on the display which could be used for
-input. Our design results in a multi-segment system. We propose to
-first segment the face from the image. Then the left and right eyes
-are each segmented from the face. The eyes are then fed into a trained
-neural network to determine the location of focus for the user. We
-will examine work that has already been done in the past on gaze
-tracking to build upon. The literature contains systems from strictly
-classical approaches to systems that are built on neural networks for
-the processing  We hope to be able to use a
-combination of the two to achieve good results. While existing
-commercial solutions use external light source and additional hardware
-to implement eye tracking, we expect to utilize openly available gaze
-eye-tracking dataset to eliminate the requirement for any additional
-hardware.
-
-\section{Problem Statement}
-The existing commercial solution available require external hardware
-being attached to existing device\cite{eyetrackerlist}\cite{tobii_1} This makes eye tracking an
-expensive and unreachable solution for many. These solutions are based
-on external infrared light source and rely on the reflection of the
-light from the user’s pupil to identify point of user interest. We hope to
-utilize the built in web camera of our system and eliminate the necessity
-of additional hardware such as external light sources with help of a
-well trained convolutional neural network.
-
-
-\section{Neural Network Datasets}
-\section{Progress}
-Despite some initial hurdles, we are still on track in terms of milestones 
-we had initially set for ourselves. We are yet to build test framework 
-to evaluate our solution. The test framework is conceptualized 
-in the Evaluation section of this report.
-
-\subsection{Neural Network}
-We currently have the neural network implemented in TensorFlow, but
-has not been trained yet with our dataset.
-
-\subsection{Timeline}
-\begin{itemize}
-  \item 2/9/18 - Familiarize with opencv and setup base infrastructure for face/eye detection
-  \item 2/16/18 - Face and Eye Detection
-  \item 2/23/18 - Setup a neural network with existing database
-  \item 2/26/18 - Compile and submit progress report
-  \item 3/9/18 - Trained the neural network ready for inference 
-  \item 3/16/18 - Generate results and demo
-\end{itemize}
-
 \begin{figure}
   \begin{center}
     \includegraphics[width=\linewidth]{original_object_path}
@@ -593,18 +536,6 @@ has not been trained yet with our dataset.
   \label{fig:originalpath}
 \end{figure}
 
-\section{Evaluation}
-We propose to evaluate our results by having the user follow an object
-around the screen on a known path (Figure~\ref{fig:originalpath}). 
-This would be our target. We can then compute the gaze of the user from 
-the observations by the system (Figure~\ref{fig:generatedpath}). 
-We can compute the error between the computed target from the
-gaze of the user and the known target location. From these two
-measurements we can compute the mean squared error between the target
-and the computed gaze location. We hope to achieve results that are
-within the size of the panels used for a keyboard on the screen. If
-the error is within the size of a key, then we can determine what keys
-a user is looking at, and even use the system as an input device.
 
 
 \begin{figure}
