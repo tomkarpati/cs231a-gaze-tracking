@@ -31,7 +31,7 @@
 \title{A Low Cost Eye-tracking Interface to Help the Physically
   Impaired Users}
 
-\author{Thomas Karpat (SCPD)\\
+\author{Thomas Karpati (SCPD)\\
 Stanford University \\
 {\tt\small tkarpati@stanford.edu}
 % For a paper whose authors are all at the same institution,
@@ -105,7 +105,7 @@ head. This makes eye tracking an expensive and unreachable solution
 for many. Some of these are based on infrared light sources and rely
 on the reflection of the light from the user's pupils to identify the
 point of user interest. Our system hopes to work around the use of
-these external devices. A brief introduction of existing solution
+these external devices. A brief introduction to an existing solution
 mechanism can be seen Figure~\ref{fig:existsol}.
 
 \begin{figure}
@@ -121,7 +121,7 @@ illuminators, a high resolution NIR sensor, on board embededd core to
 assist image processing and sensor-illumination-synchronization, 
 and a high frame rate camera modified for imroved eye tracking. 
 The illuminators project a dot matrix on user and NIR sensor along with 
-high speed camera take pictures of users eyes. The inputs from NIR sensor 
+high speed camera take pictures of user's eyes. The inputs from NIR sensor 
 and camera are processed to find reflection patterns by on board embedded core, 
 which are used to mathematically evaluate points of interest. 
 This certainly gives the commercial solution edge over other implementation.
@@ -137,44 +137,52 @@ work contains several videos with synchronized homographies that link
 the location and pose of the eyes with the location of the screen
 relative to each other. This solution however requires a user to have
 a head mounted camera to capture a video of the eyes moving in the
-users eye sockets. While this may be effective, it can be cumbersome
+user's eye sockets. While this may be effective, it can be cumbersome
 for the user.
 
 
 \section{Related Work}
-Eye tracking has being studied over hundred years, a great deal of research has gone into studies of the mechanisms and dynamics of eye rotation, but the goal of eye- tracking is most often to estimate gaze direction.  The papers which closely relevant to our work using CNN are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{zhaomeng}.
+Eye tracking has being studied over hundred years, a great deal of
+research has gone into studies of the mechanisms and dynamics of eye
+rotation, but the goal of eye- tracking is most often to estimate gaze
+direction.  The papers which are closely relevant to our work using a
+convolutional network are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{zhaomeng}.
 
-In the paper "Eye Tracking for Everyone", authors implemented solution for Apple iOS mobile devices, it used iOS libraries to identify face and eye. Author used crowd sourcing to collect a large scale reliable dataset. The training of the system required manual intervention, and user to physically interact with the device. 
+In the paper "Eye Tracking for Everyone", authors implemented a
+solution for Apple iOS mobile devices. It used iOS libraries to
+identify faces and eyes. The authors used crowd sourcing to collect a large-scale dataset. The training of the system required manual intervention, and user to physically interact with the device. 
 
-In "Webcam-Based Eye Movement Analysis Using CNN" authors Meng and Zhao used take a different approach at collecting data, they utilized widely popular web camera to capture user image for training. Their experiment obtained a large manually sanitized data to test their neural network. 
+In "Webcam-Based Eye Movement Analysis Using CNN", the authors Meng
+and Zhao take a different approach at collecting data. They utilized a
+widely popular web camera to capture user images for training. Their experiments obtained a large manually sanitized data to test their neural network. 
 
-There are some other non-CNN based experiments based on paper by Fabian Timm - "Accurate Eye center localization by means of Gradient". 
+There are some other non-CNN based experiments based on a paper by Fabian Timm - "Accurate Eye center localization by means of Gradient". 
 
 \section{Technical Approach}
-The system was implemented in Python 2.7 using both the OpenCV
-libraries and the TensorFlow libraries. The OpenCV libraries give an
-wasy hardware abstraction layer to video capture and display
+The system was implemented in Python 2.7, using both the OpenCV
+libraries and the TensorFlow libraries. The OpenCV libraries provide a
+hardware abstraction layer to video capture and display
 peripherals. The system was designed to run 2 threads, one thread to
 capture and validate input from webcam and another to process the
 captured input. The second thread processes the captured and
 sanitized input through our convolutional neural network and obtains
 the point of user interest on the screen. We merged these 2 threads to
-improve reliability, we face some lag in response as a compromise. In
-following sections we explain the submodules of the system from image
+improve reliability, and we faced some lag in response as a compromise. In
+following sections, we explain the submodules of the system from image
 capturing to evaluating point of interest.
 
 \subsection{Image capture and face/eye detection}
 We use haar-cascade utilizing Viola-Jones face recognition algorithm to 
-identify face and eyes. First we capture input stream using peripheral
+identify face and eyes. First we capture an input stream using the peripheral
 interface provided by OpenCV. 
 
 We convert each frame as it is captured to grayscale, this frame is then analyzed 
 using Viola-Jone's haar-feature based cascade classifier to identify a face.  
-The Viola-Jones algorithm being utilized by underlying framework is very robust, 
-high-speed and focused on face detection only. This framework doesn't 
+The Viola-Jones algorithm being utilized by the underlying framework is very robust, 
+high-speed, and focused on face detection only. This framework doesn't 
 identify the individuals. 
 
-A few common properties of human face are used to recognize face, for example: the human eye region is darker than the upper-cheeks and the nose bridge region is brighter than the eyes. The Viola-Jones object detector classifies images based on such feature value instead of pixels.  A feature based system operates much faster than pixel based systems. Rectangle features are computed integral image. An integral is an intermediate representation for the original image. 
+A few common properties of human face are used to recognize the face, for example: the human eye region is darker than the upper-cheeks and the nose bridge region is brighter than the eyes. The Viola-Jones object detector classifies images based on such feature values instead of pixels.  A feature based system operates much faster than pixel based systems. Rectangle features are computed integral image. An integral is an intermediate representation for the original image. 
 We opted out to use face detection haar-cascade provided by OpenCV, as it is already trained with more than 5000 face images and 300 million non-face images with varying poses, and varying illumination across many individuals. 
 
 \begin{figure}
@@ -231,9 +239,9 @@ gaze.
 To aid the neural network, the input data images are preprocessed. We
 perform the preprocessing step to aid in locating the pupils withing
 the images of the eyes. The pupils of the eyes are distinctive in that
-they are, in general, the only large round thing in the image. Also,
+they are, in general, the only large round thing in the eye image. Also,
 due to the fact that the iris tends to be of a darker color than the
-sclera and should be easily detectable in a grayscale image of the
+sclera and therefore should be easily detectable in a grayscale image of the
 eye when looking at the gradient of the image. The pupils are
 attempted to be located by performing a search for circles in the
 Hough space that are of a certain size. The pupils are then added as a
@@ -271,7 +279,7 @@ slightly from the actual pupils. To counteract this, we provide both
 the RGB image of the eye and the mask that we determine locating the
 pupils. The detection of the pupil for processing the data set is shown in
 Figure~\ref{fig:hough-pupils-uta}. During online training and testing
-we also perform a hough space search for pupils in each image of the
+we also perform a Hough space search for pupils in each image of the
 eye. The results for this can be seen in Figure~\ref{fig:hough-online}
 which show the capture and processing the pupils. In addition, the
 proper left and right eyes needed to be determined, since the list of eyes
@@ -286,7 +294,7 @@ bounding box is always passed as the same input to the neural network.
 Our neural network is implemented in the TensorFlow framework. The
 network is a multilayer classifier where the inputs are the extracted
 images of both the left and the right eyes and the bounding boxes for
-both eyes and the face in the original image. The two images of the
+both eyes and the bounding box for the face in the original image. The two images of the
 eyes are 32x32x4 images where the extracted images of the eyes are
 scaled to a set size. This gives us a fixed image size to feed into
 the network invariant of the original size of the eyes in the original
@@ -318,7 +326,7 @@ filtered once again through a final convolutional layer. This third
 layer has a kernel with 3x3 support and results in 64 16x16
 outputs. This filter layer is then again passed through a final
 max-pooling layer with a non-overlapping 2x2 filter. The final
-dimensionality of the output from the convolutional layers in 8x8x64.
+dimensionality of the output from the convolutional layers is 8x8x64.
 
 The two separate convolutional networks are then combined with the
 bounding boxes from the face and eye detection step. The outputs
@@ -348,7 +356,7 @@ distance is then also minimized.
 \subsection{Neural Network Datasets}
 We used the Point of Gaze Eye-Tracking Dataset from the University
 of Texas at Arlington\cite{eyetracking}. This provides a mapping from
-a video of eyes to locations in 3D space where the gaze of a user is
+a video of eyes to locations in 3D space where the user is
 focusing their attention. The dataset consists of data captured from
 20 subjects. The dataset for each subject consists of a video of the
 user’s eye, transform matrices that relate the user’s eye and the
@@ -402,7 +410,7 @@ corresponds to a median error distance of approximagely 13\% of the
 field of view of the viewer.
 
 One of the issues that we faced was the problem of the head pose.
-The network needed to still be trained online due to calibrate where
+The network needed to still be trained online to calibrate where
 the user was looking with the screen relative to the user's head.
 Since the system should be able to determine the head pose,
 that training needed to be done online so that we can construct the
@@ -447,7 +455,7 @@ Initially, the target moves across the screen in a couple of
 directions for the user to follow. After a few minutes of training,
 the system would switch into testing mode where the cursor would
 follow the inferred x- and y- positions that the eye was supposed to
-be looking at. Our results, were that the location generated by our
+be looking at. Our results were that the location generated by our
 network would not really move on the screen regardless of where the
 user would look. Rather, the point of gaze as determined by the system
 would follow the movement of the face on the screen as the user's head
@@ -517,10 +525,21 @@ data set could then be shuffled, like the UTA dataset was suffled for
 training, and keep the entire system from just drifting to the last
 location of the target.
 
+Third, we should split the convolutional network into it's different
+parts. The thinking is that we can construct three networks. One for
+mapping the eye image to a relative angle of view from the eye, one
+for each of the left and right eyes. Then these outputs can be fed
+into a much smaller fully connected network that would perform the
+head pose transformation to the final output predicted gaze target on
+the screen. With this, we can train the two convolutional networks on
+the images of the eyes, and then we can perform and head pose training
+separately on-line in the system. Since the networks are separate, we
+can then not train the convolutional networks, but just the final
+transformation network. This would prevent the on-line training from
+interfearing with the learned parameters for the convolutional network.
 
-
-We believe limited frame rate of built in laptop and tablet front facing cameras was another 
-big limiting factor in our experiment. The latest commercial solution by Tobii like "Tobii X3-120", has a sampling 
+Finall, We believe limited frame rate of the built in laptop and tablet front facing cameras was another 
+factor in our experiment. The latest commercial solution by Tobii like "Tobii X3-120", has a sampling 
 rate of 120 frames per second, which is 10x of what our system is able to process in its current state. 
 We also believe implementing such solution on latest handheld devices like iPhoneX, which 
 come pre-equiped with an infrared sensor(dot projector and receiver), is more viable in near future. 
