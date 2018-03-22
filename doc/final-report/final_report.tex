@@ -66,7 +66,7 @@ in a fixed position or to immobilize their head to use the system.
 %%%%%%%%% BODY TEXT
 \section{Introduction}
 A gaze-tracking system has numerous application in human computer
-interfaces, from use as an input modality for the imparired\cite{calvo}, to
+interfaces, from use as an input modality for the impaired\cite{calvo}, to
 determination of region of interest for augmented reality and image
 processing. The goal of gaze-tracking is to determine the location
 that a user is looking at. For aiding the impaired, the system would
@@ -79,9 +79,12 @@ system.
 The system proposed is a completely passive system that uses a single
 camera. The system attempts to eliminate the need for expensive
 external equipment, just using the integrated camera available on most
-laptops and tablets. The system is composed of two parts. The first
+laptops and tablets. The system is composed of two main parts. The first
 part is to determine the location of the user in the frame of the camera, and the
-location of the eyes. This information is then fed into a
+location of the eyes. To this end, we segment the face of the user
+from the rest of the image. Then the left and right eyes are are each
+segmented from the face. This information, the location of the face,
+the two eyes and the images of the two eyes, is then fed into a
 convolutional neural network to determine the point of gaze of the
 user from the information determined from the camera image.
 
@@ -104,40 +107,6 @@ on the reflection of the light from the user's pupils to identify the
 point of user interest. Our system hopes to work around the use of
 these external devices. A brief introduction of existing solution
 mechanism can be seen Figure~\ref{fig:existsol}.
-
-
-
-%%%%% This needs to be resolved between two versions
-
-processing. Our system would use a camera on a laptop and determine
-the target of the users gaze. This would then be used to move a cursor
-around a graphical keyboard on the display which could be used for
-input. Our design results in a multi-segment system. We propose to
-first segment the face from the image. Then the left and right eyes
-are each segmented from the face. The eyes are then fed into a trained
-neural network to determine the location of focus for the user. We
-will examine work that has already been done in the past on gaze
-tracking to build upon. The literature contains systems from strictly
-classical approaches to systems that are built on neural networks for
-the processing \cite{krafka} \cite{mcmurrough} \cite{weidenbacher}
-\cite{baluja} \cite{cazzato} \cite{li}. We hope to be able to use a
-combination of the two to achieve good results. While existing
-commercial solutions use external light source and additional hardware
-to implement eye tracking, we expect to utilize openly available gaze
-eye-tracking dataset to eliminate the requirement for any additional
-hardware.
-
-\section{Problem Statement}
-The existing commercial solution available require external hardware
-being attached to existing device\cite{eyetrackerlist}\cite{tobii_1} This makes eye tracking an
-expensive and unreachable solution for many. These solutions are based
-on external infrared light source and rely on the reflection of the
-light from the user?s pupil to identify point of user interest. We hope to
-utilize the built in web camera of our system and eliminate the necessity
-of additional hardware such as external light sources with help of a
-well trained convolutional neural network.
-
-%%%% End resolve
 
 \begin{figure}
   \begin{center}
@@ -162,10 +131,6 @@ users eye sockets. While this may be effective, it can be cumbersome
 for the user.
 
 
-
-%%%%%%% Begine resolve 
-
-A brief introduction of existing solution mechanism can be seen Figure~\ref{fig:existsol}.
 \section{Related Work}
 Eye tracking has being studied over hundred years, a great deal of research has gone into studies of the mechanisms and dynamics of eye rotation, but the goal of eye- tracking is most often to estimate gaze direction.  The papers which closely relevant to our work using CNN are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{zhaomeng}.
 
@@ -175,33 +140,28 @@ In "Webcam-Based Eye Movement Analysis Using CNN" authors Meng and Zhao used tak
 
 There are some other non-CNN based experiments based on paper by Fabian Timm - "Accurate Eye center localization by means of Gradient". 
 
-\section{Our Approach}
-The system was originally  designed to run 2 threads, one thread to capture 
-
-%%% End resolve
-
-and validate input from webcam and another to process the 
-captured input. The second thread processes the captured and 
-sanitized input through our convolutional neural network and 
-obtains the point of user interest on the screen. We merged these 2 threads to improve reliability, we face some lag in response as a compromise. In following section we explain the break down of system from image capturing  to evaluating point of interest.  
-
-
+\section{Technical Approach}
+The system was implemented in Python 2.7 using both the OpenCV
+libraries and the TensorFlow libraries. The OpenCV libraries give an
+wasy hardware abstraction layer to video capture and display
+peripherals. The system was designed to run 2 threads, one thread to
+capture and validate input from webcam and another to process the
+captured input. The second thread processes the captured and
+sanitized input through our convolutional neural network and obtains
+the point of user interest on the screen. We merged these 2 threads to
+improve reliability, we face some lag in response as a compromise. In
+following sections we explain the submodules of the system from image
+capturing to evaluating point of interest.
 
 \subsection{Image capture and face/eye detection}
-
-We implemented the system in Python 2.7 using the OpenCV libraries for 
-image processing tasks. The use of OpenCV gives us an easy hardware 
-abstraction layer to video capture and display peripherals. We use 
-haar-cascade utilizing Viola-Jones face recognition algorithm to 
-identify face and eyes. 
-
-First we capture input stream using peripheral
-interface provided by OpenCV. We convert each 
-frame as it is captured to grayscale, this frame is then analyzed 
-using Viola-Jone's haar-feature based cascade classifier to identify a face.  
-The Viola-Jones algorithm being utilized by underlying framework is very robust, 
-high-speed and focused on face detection only. This framework doesn't 
-identify the individuals. 
+We use haar-cascade utilizing Viola-Jones face recognition algorithm to 
+identify face and eyes. First we capture input stream using peripheral
+interface provided by OpenCV. We convert each frame as it is captured
+to grayscale, this frame is then analyzed  using Viola-Jone's
+haar-feature based cascade classifier to identify a face. The
+Viola-Jones algorithm being utilized by underlying framework is very
+robust, high-speed and focused on face detection only. This framework
+doesn't identify the individuals. 
 
 A few common properties of human face are used to recognize face, for example: the human eye region is darker than the upper-cheeks and the nose bridge region is brighter than the eyes.
 
