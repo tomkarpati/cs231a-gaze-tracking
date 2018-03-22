@@ -146,17 +146,17 @@ Eye tracking has being studied over hundred years, a great deal of
 research has gone into studies of the mechanisms and dynamics of eye
 rotation, but the goal of eye- tracking is most often to estimate gaze
 direction.  The papers which are closely relevant to our work using a
-convolutional network are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{zhaomeng}.
+convolutional network are "Eye Tracking for Everyone"\cite{krafka} and "Webcam-Based Eye Movement Analysis Using CNN"\cite{webcam_based_cnn}.
 
 In the paper "Eye Tracking for Everyone", authors implemented a
 solution for Apple iOS mobile devices. It used iOS libraries to
 identify faces and eyes. The authors used crowd sourcing to collect a large-scale dataset. The training of the system required manual intervention, and user to physically interact with the device. 
 
-In "Webcam-Based Eye Movement Analysis Using CNN"\cite{webcam_based_cnn}, the authors Meng
+In "Webcam-Based Eye Movement Analysis Using CNN", the authors Meng
 and Zhao take a different approach at collecting data. They utilized a
 widely popular web camera to capture user images for training. Their experiments obtained a large manually sanitized data to test their neural network. 
 
-There are some other non-CNN based experiments based on a paper by Fabian Timm - "Accurate Eye center localization by means of Gradient"{fabian}. 
+There are some other non-CNN based experiments based on a paper by Fabian Timm - "Accurate Eye center localization by means of Gradient"\cite{fabian}. 
 
 \section{Technical Approach}
 The system was implemented in Python 2.7, using both the OpenCV
