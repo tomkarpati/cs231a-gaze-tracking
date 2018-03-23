@@ -1,0 +1,15 @@
+system code
+
+util.py :
+   Some utilities to sanitize data from the system passed into the CNN
+
+test_capture.py :
+   Run system with 3x3 grid of on-line training pattern.
+      - can save CNN model by pressing 's'
+      - can toggle between training/test by pressing 't'
+
+cap_capture.py :
+   Run system
+
+
+

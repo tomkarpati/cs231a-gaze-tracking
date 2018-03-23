@@ -1,0 +1,23 @@
+CNN code
+
+pTfCNNPredictor.py : 
+   Class for CNN 
+
+pData.py :
+   Class for data used for CNN training.
+
+clean_data_uta.py :
+   Help provided by running "python clean_data_uta.py --help"
+   Read and process data for an entire participant of the UTA dataset for gaze-tracking
+
+train_predictor.py :
+   Help provided by running "python train_predictor.py --help"
+   Run initial training on the CNN and write out model
+
+run_predictor.py :
+   Help provided by running "python run_predictor.py --help"
+   Load model and run training with validation step
+
+
+
+
