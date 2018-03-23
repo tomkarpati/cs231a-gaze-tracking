@@ -538,6 +538,16 @@ can then not train the convolutional networks, but just the final
 transformation network. This would prevent the on-line training from
 interfearing with the learned parameters for the convolutional network.
 
+In addition, the face and eye bounding boxes are fairly noisy. A
+low-pass filter on the bounding boxes would reduce the noise passed
+into the convolutional network. It would also stabilize the location
+of the center of the eyes for the network to filter and reduce the
+difference in scaling that the eye image would undergo. The user would
+be consistant in time, with slowly varying changes in position and
+distance from the camera, so a low pass filter would be able to pass
+through slowly changing features like the persion moving, but reduce
+the amount of noise that is passed to the network.
+
 Finally, we believe limited frame rate of the built in laptop and tablet front facing cameras was another 
 factor in our experiment. The latest commercial solution by Tobii like "Tobii X3-120", has a sampling 
 rate of 120 frames per second, which is 10x of what our system is able to process in its current state. 
