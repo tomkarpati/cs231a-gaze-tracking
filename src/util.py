@@ -15,8 +15,8 @@ def cnnProcessEyes(color, dim):
                                cv2.HOUGH_GRADIENT,
                                dp=16,
                                minDist=imsize[0],
-                               minRadius=imsize[0]/10,
-                               maxRadius=imsize[0]/2)
+                               minRadius=int(imsize[0]*1.0/10),
+                               maxRadius=int(imsize[0]*1.0/4))
 
     print "circles: {}".format(circles)
     drawn = color[:] # keep a copy yo draw on
