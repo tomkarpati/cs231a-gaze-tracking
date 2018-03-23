@@ -217,7 +217,7 @@ class pTfCNNPredictor:
         def sub_loss(target, score, name):
             # Compute the error
             with tf.name_scope(name):
-                se = (tf.norm((target - score),axis=1))**2
+                se = tf.norm((target - score),axis=1)**2
                 print se
                 mse = tf.reduce_mean(se, name="mean_error")
                 print mse
@@ -335,7 +335,7 @@ class pTfCNNPredictor:
         testOpList = []
         # Define some variables
         with tf.name_scope("test"):
-            tf.summary.scalar("Testing epock mean loss", self.meanLoss)
+            tf.summary.scalar("Testing epoch mean loss", self.meanLoss)
             
             self.merged = tf.summary.merge_all()
             testOpList.append(self.merged)
@@ -343,6 +343,8 @@ class pTfCNNPredictor:
         testOpList.extend(opList)
 
             
+        epochSE = np.zeros(trainingSet.numSamples)
+                    
         # Run training
         for i in range(epochs):
             sys.stdout.write("Training: epoch {}:\n".format(i))
@@ -382,6 +384,7 @@ class pTfCNNPredictor:
                     
                 (meanLoss, totalLoss, predVec, se, tmp, train) = result
                 epochLoss += totalLoss
+                epochSE[batchStart:batchEnd] = se # store the actual values of SE to compute median
 
                 #if (not self.tmp == None):
                 #print self.tmp[0,:,:,0]
@@ -411,13 +414,23 @@ class pTfCNNPredictor:
 
 
             print "Epoch mean loss: {}".format(epochLoss*1.0/trainingSet.numSamples)
+            print "Epoch mean loss: {}".format(np.mean(epochSE))
+            print "Epoch median loss: {}".format(np.median(epochSE))
 
             if (testSet is not None):
                 # For each epoch, run forward inference
                 eyeL = testSet.eyeL[:,:,:,0:4]
+                eyeR = testSet.eyeR[:,:,:,0:4]
+                eyeLBB = testSet.eyeLBB[:,:]
+                eyeRBB = testSet.eyeRBB[:,:]
+                faceBB = testSet.faceBB[:,:]
                 target = testSet.targetVec[:]
                 result = self.session.run(testOpList,
                                           feed_dict={self.eyeL : eyeL,
+                                                     self.eyeR : eyeR,
+                                                     self.eyeLBB : eyeLBB,
+                                                     self.eyeRBB : eyeRBB,
+                                                     self.faceBB : faceBB,
                                                      self.targetVec : target})
                 if self.tensorboard:
                     summary = result[0]
@@ -437,6 +450,7 @@ class pTfCNNPredictor:
                     self.logFH.write(s)
                 
                 print "Mean loss: {}".format(meanLoss)
+                print "Median loss: {}".format(np.median(se))
             
         #print "VAR: ({}) {}".format(np.shape(tmp),tmp)
         #for im in range(0,np.size(tmp,axis=3)):
