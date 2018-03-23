@@ -80,6 +80,6 @@ print "target x mean: {}".format(np.mean(trainData.targetVec, axis=0))
 # Train this thing
 predictor.train(trainingSet=trainData,
                 testSet=None,
-                epochs=10)
+                epochs=100)
 
 predictor.save()
